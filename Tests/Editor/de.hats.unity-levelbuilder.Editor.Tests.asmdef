@@ -1,0 +1,22 @@
+{
+    "name": "de.hats.unity-levelbuilder.Editor.Tests",
+    "references": [
+        "GUID:e8edfeb69a466924686a95e7c64b4c23",
+        "GUID:dcfe78ad2f96ca941a18fc13fd1229ce"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [
+        " UNITY_INCLUDE_TESTS"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
