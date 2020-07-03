@@ -11,7 +11,7 @@ public class PersistentInstanceId : MonoBehaviour
 
     private Guid _guid;
 
-    public Guid guid
+    public Guid Guid
     {
         get
         {
@@ -32,7 +32,7 @@ public class PersistentInstanceId : MonoBehaviour
     public void CreateNewId()
     {
         _guid = Guid.NewGuid();
-        guidAsString = guid.ToString();
+        guidAsString = Guid.ToString();
     }
 }
 

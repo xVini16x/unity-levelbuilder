@@ -7,7 +7,7 @@ public class PersistentIdEditor : Editor {
     {
         PersistentInstanceId persistentId = (PersistentInstanceId) target;
 
-        if(persistentId.guid == System.Guid.Empty)
+        if(persistentId.Guid == System.Guid.Empty)
         {
             persistentId.CreateNewId();
             //Stop from updating 
@@ -19,6 +19,6 @@ public class PersistentIdEditor : Editor {
     {
         PersistentInstanceId persistentId = (PersistentInstanceId)target;
 
-        EditorGUILayout.SelectableLabel(persistentId.guid.ToString());
+        EditorGUILayout.SelectableLabel(persistentId.Guid.ToString());
     }
 }
