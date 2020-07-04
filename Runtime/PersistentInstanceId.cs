@@ -16,9 +16,17 @@ public class PersistentInstanceId : MonoBehaviour
         get
         {
             //Recreate guid in newly loaded game
-            if (_guid == Guid.Empty && !String.IsNullOrEmpty(guidAsString))
+            if (_guid == Guid.Empty)
             {
-                _guid = new Guid(guidAsString);
+                if (!String.IsNullOrEmpty(guidAsString))
+                {
+                    _guid = new Guid(guidAsString);
+                }
+                else
+                {
+                    _guid = System.Guid.NewGuid();
+                    guidAsString = _guid.ToString();
+                }                
             }
             return _guid;
         }
@@ -28,7 +36,7 @@ public class PersistentInstanceId : MonoBehaviour
     {    
         
     }
-    
+
     public void CreateNewId()
     {
         _guid = Guid.NewGuid();

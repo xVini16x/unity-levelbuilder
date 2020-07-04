@@ -9,10 +9,9 @@ public class PersistentIdEditor : Editor {
 
         if(persistentId.Guid == System.Guid.Empty)
         {
-            persistentId.CreateNewId();
-            //Stop from updating 
-            EditorUtility.SetDirty(target);
+            persistentId.CreateNewId();            
         }
+        EditorUtility.SetDirty(target);
     }
 
     public override void OnInspectorGUI()
