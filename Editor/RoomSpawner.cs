@@ -20,6 +20,7 @@ public class RoomSpawner : EditorWindow
     private GameObject roomfloor;
 
     private string assetPath = "Assets/_GameAssets/Data/";
+    private string fileformat = ".asset";
 
     // Add menu named "My Window" to the Window menu
     [MenuItem("Window/Unity Levelbuilder Tool")]
@@ -100,7 +101,7 @@ public class RoomSpawner : EditorWindow
                 roomfloorData.GuidRight = rightWallData.Guid;
                 roomfloorData.GuidFront = backWallData.Guid;
 
-                RoomData roomData = new RoomData();
+                RoomData roomData = ScriptableObject.CreateInstance<RoomData>();
                 roomData.AddRoomElement(backWallData);
                 roomData.AddRoomElement(frontWallData);
                 roomData.AddRoomElement(leftWallData);
@@ -110,8 +111,8 @@ public class RoomSpawner : EditorWindow
                 roomData.AddRoomElement(cornerFLData);
                 roomData.AddRoomElement(cornerFRData);
                 roomData.AddRoomElement(roomfloorData);
-                AssetDatabase.CreateAsset(roomData, assetPath +"/"+ roomname + ".asset");              
-
+                AssetDatabase.CreateAsset(roomData, assetPath + roomname + fileformat);
+                AssetDatabase.SaveAssets();
                 RoomDataComponent roomDataComponent= room.AddComponent<RoomDataComponent>();
                 roomDataComponent.roomData = roomData;
                 Debug.Log("Room created");
