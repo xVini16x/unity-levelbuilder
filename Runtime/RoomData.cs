@@ -3,11 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using static System.String;
 
-public class RoomDataComponent : MonoBehaviour
-{
-    public RoomData roomData { get; set; }
-}
-
 [CreateAssetMenu(fileName = "RoomData", menuName = "LevelEditor/RoomData", order = 1)]
 public class RoomData : ScriptableObject
 {
