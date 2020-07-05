@@ -116,6 +116,30 @@ public class RoomElement
 
         return guidField;
     }
+
+    public void ConnectLeftElement(RoomElement left)
+    {
+        GuidLeft = left.Guid;
+        left.GuidRight = Guid;
+    }
+
+    public void ConnectBackElement(RoomElement back)
+    {
+        GuidBack = back.Guid;
+        back.GuidFront = Guid;
+    }
+
+    public void ConnectRightElement(RoomElement right)
+    {
+        GuidRight = right.Guid;
+        right.GuidLeft = Guid;
+    }
+
+    public void ConnectFrontElement(RoomElement front)
+    {
+        GuidFront = front.Guid;
+        front.GuidBack = Guid;
+    }
 }
 
 public enum RoomElementTyp
