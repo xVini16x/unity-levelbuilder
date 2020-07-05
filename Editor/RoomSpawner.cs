@@ -11,7 +11,7 @@ public class RoomSpawner : EditorWindow
     [SerializeField] private GameObject floor;
     [SerializeField] private GameObject corner;
     [SerializeField] private string roomName = "StandardRoom";
-    private Vector2Int dimensions = new Vector2Int(1, 1);
+    [SerializeField] private Vector2Int roomSize = new Vector2Int(1, 1);
 
 
     // Add menu named "My Window" to the Window menu
@@ -31,7 +31,8 @@ public class RoomSpawner : EditorWindow
         corner = EditorGUILayout.ObjectField("Corner Prefab", corner, typeof(GameObject), true) as GameObject;
         GUILayout.Label("Room Settings", EditorStyles.boldLabel);
         roomName = EditorGUILayout.TextField("Name", roomName);
-
+        roomSize = EditorGUILayout.Vector2IntField("Room Size", roomSize);
+        
         if (GUILayout.Button("Create Room"))
         {
             if (roomName == null)
@@ -130,11 +131,11 @@ public class RoomSpawner : EditorWindow
         var roomSize = new Vector3();
         var numberOfWalls = new Vector2Int();
 
-        var numberOfWallsAndRoomSize = CalculateNumberOfWallsAndRoomSize(dimensions.x, wallSize.x, cornerSize.x, "x");
+        var numberOfWallsAndRoomSize = CalculateNumberOfWallsAndRoomSize(this.roomSize.x, wallSize.x, cornerSize.x, "x");
         roomSize.x = numberOfWallsAndRoomSize.roomSize;
         numberOfWalls.x = numberOfWallsAndRoomSize.numberOfWalls;
 
-        numberOfWallsAndRoomSize = CalculateNumberOfWallsAndRoomSize(dimensions.y, wallSize.x, cornerSize.z, "z");
+        numberOfWallsAndRoomSize = CalculateNumberOfWallsAndRoomSize(this.roomSize.y, wallSize.x, cornerSize.z, "z");
         roomSize.z = numberOfWallsAndRoomSize.roomSize;
         numberOfWalls.y = numberOfWallsAndRoomSize.numberOfWalls;
 
@@ -145,8 +146,8 @@ public class RoomSpawner : EditorWindow
 
     private (int numberOfWalls, float roomSize) CalculateNumberOfWallsAndRoomSize(float unitsToFill, float wallSize, float cornerSize, string dimensionName)
     {
-        //Guarantee to not create a room bigger than wished for (TODO: change to create a room near the size of the wished size)
-        var numberOfWalls = (int) ((unitsToFill / 2f - cornerSize) / wallSize);
+        // Guarantees to generate a room as big or smaller than the configured room size (0.01f tolerance to avoid problems due to floating point imprecision)
+        var numberOfWalls = (int) ((unitsToFill + 0.01f - (2f * cornerSize)) / wallSize);
 
         if (numberOfWalls == 0)
         {
@@ -266,7 +267,7 @@ public class RoomSpawner : EditorWindow
             ConnectFrontAndLeftElement(newRoomElement, roomElements, indices);
             indices.x = 0;
             currentSpawnPos.x = spawnInfo.RoomBounds.min.x;
-            currentSpawnPos.z += spawnedElementSize.z;
+            currentSpawnPos.z -= spawnedElementSize.z;
         }
     }
     
