@@ -161,7 +161,9 @@ public class RoomSpawner : EditorWindow
     {
         Vector3 currentSpawnPos;
         Vector2Int indices;
-        SpawnOrientation orientation;
+        SpawnOrientation wallOrientation;
+        SpawnOrientation firstCornerOrientation;
+        SpawnOrientation secondCornerOrientation;
 
         RoomElement newRoomElement;
         Vector3 spawnedElementSize;
@@ -169,20 +171,24 @@ public class RoomSpawner : EditorWindow
         if (isBackWall)
         {
             indices = new Vector2Int(0, roomElements.GetLength(0) - 1);
-            orientation = SpawnOrientation.Back;
+            wallOrientation = SpawnOrientation.Back;
+            firstCornerOrientation = SpawnOrientation.Left;
+            secondCornerOrientation = wallOrientation;
             currentSpawnPos = spawnInfo.RoomBounds.min;
-            currentSpawnPos = cornerSpawner.ConvertLeftBottomBackPositionToLeftBottomCenterPosition(currentSpawnPos, orientation);
+            currentSpawnPos = cornerSpawner.ConvertLeftBottomBackPositionToLeftBottomCenterPosition(currentSpawnPos, wallOrientation);
         }
         else
         {
             indices = new Vector2Int(0, 0);
-            orientation = SpawnOrientation.Front;
+            wallOrientation = SpawnOrientation.Front;
+            firstCornerOrientation = wallOrientation;
+            secondCornerOrientation = SpawnOrientation.Right;
             currentSpawnPos = spawnInfo.RoomBounds.min;
             currentSpawnPos.z = spawnInfo.RoomBounds.max.z;
-            currentSpawnPos = cornerSpawner.ConvertLeftBottomFrontPositionToLeftBottomCenterPosition(currentSpawnPos, orientation);
+            currentSpawnPos = cornerSpawner.ConvertLeftBottomFrontPositionToLeftBottomCenterPosition(currentSpawnPos, wallOrientation);
         }
-
-        (newRoomElement, spawnedElementSize) = cornerSpawner.SpawnByLeftBottomCenter(currentSpawnPos, orientation, parent,$"({indices.y}, {indices.x})");
+        
+        (newRoomElement, spawnedElementSize) = cornerSpawner.SpawnByLeftBottomCenter(currentSpawnPos, firstCornerOrientation, parent,$"({indices.y}, {indices.x})");
         currentSpawnPos.x += spawnedElementSize.x;
         roomElements[indices.y, indices.x] = newRoomElement;
         roomData.AddRoomElement(newRoomElement);
@@ -196,7 +202,7 @@ public class RoomSpawner : EditorWindow
 
         for (; indices.x < roomElements.GetLength(1) - 1; indices.x++)
         {
-            (newRoomElement, spawnedElementSize) = wallSpawner.SpawnByLeftBottomCenter(currentSpawnPos, orientation, parent, $"({indices.y}, {indices.x})");
+            (newRoomElement, spawnedElementSize) = wallSpawner.SpawnByLeftBottomCenter(currentSpawnPos, wallOrientation, parent, $"({indices.y}, {indices.x})");
             currentSpawnPos.x += spawnedElementSize.x;
             roomElements[indices.y, indices.x] = newRoomElement;
             roomData.AddRoomElement(newRoomElement);
@@ -210,8 +216,8 @@ public class RoomSpawner : EditorWindow
                 ConnectLeftElement(newRoomElement, roomElements, indices);
             }
         }
-
-        (newRoomElement, _) = cornerSpawner.SpawnByLeftBottomCenter(currentSpawnPos, orientation, parent, $"({indices.y}, {indices.x})");
+        
+        (newRoomElement, _) = cornerSpawner.SpawnByLeftBottomCenter(currentSpawnPos, secondCornerOrientation, parent, $"({indices.y}, {indices.x})");
         roomElements[indices.y, indices.x] = newRoomElement;
         roomData.AddRoomElement(newRoomElement);
         
