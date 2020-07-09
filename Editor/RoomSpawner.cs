@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEditor;
 using UnityLevelEditor.Model;
 
@@ -6,11 +7,12 @@ namespace UnityLevelEditor.RoomSpawning
 {
     public class RoomSpawner : EditorWindow
     {
+        private const float roomSizeLimit = 200f;
         [SerializeField] private GameObject wall;
         [SerializeField] private GameObject floor;
         [SerializeField] private GameObject corner;
         [SerializeField] private string roomName = "StandardRoom";
-        [SerializeField] private Vector2Int roomSize = new Vector2Int(1, 1);
+        [SerializeField] private Vector2 roomSize = new Vector2(1, 1);
 
         // Add menu named "My Window" to the Window menu
         [MenuItem("Window/Unity Levelbuilder Tool")]
@@ -29,24 +31,95 @@ namespace UnityLevelEditor.RoomSpawning
             corner = EditorGUILayout.ObjectField("Corner Prefab", corner, typeof(GameObject), true) as GameObject;
             GUILayout.Label("Room Settings", EditorStyles.boldLabel);
             roomName = EditorGUILayout.TextField("Name", roomName);
-            roomSize = EditorGUILayout.Vector2IntField("Room Size", roomSize);
 
+            if (wall == null || floor == null || corner == null)
+            {
+                EditorGUILayout.HelpBox("Please assign all prefabs to create a room. You can find default prefabs in the prefabs folder.", MessageType.Warning);
+                return;
+            }
+
+            Bounds wallBounds, cornerBounds, floorBounds;
+            
+            try
+            { 
+                wallBounds = GetBoundsOfPrefab(wall, RoomElementTyp.Wall);
+                cornerBounds = GetBoundsOfPrefab(corner, RoomElementTyp.Corner);
+                floorBounds = GetBoundsOfPrefab(floor, RoomElementTyp.Floor);
+            }
+            catch (MissingComponentException e)
+            {
+                EditorGUILayout.HelpBox(e.Message, MessageType.Error);
+                return;
+            }
+
+            if (!CheckBoundSizesCorrect(wallBounds, cornerBounds, floorBounds))
+            {
+                return;
+            }
+            
+            var minRoomSize = wallBounds.size.x + 2 * cornerBounds.size.x;
+            var maxRoomSize = AdaptRoomSize(roomSizeLimit, minRoomSize, wallBounds.size.x);
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Room Size X");
+            roomSize.x = AdaptRoomSize(EditorGUILayout.Slider(roomSize.x, minRoomSize, maxRoomSize), minRoomSize, wallBounds.size.x);
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
+            EditorGUILayout.LabelField("Room Size Z");
+            roomSize.y = AdaptRoomSize(EditorGUILayout.Slider(roomSize.y, minRoomSize, maxRoomSize), minRoomSize, wallBounds.size.x);
+            EditorGUILayout.EndHorizontal();
+            
             if (GUILayout.Button("Create Room"))
             {
-                if (roomName == null)
-                {
-                    Debug.LogError("Roomname cannot be empty.");
-                    return;
-                }
-
-                if (wall == null || floor == null || corner == null)
-                {
-                    Debug.LogError("Please assign all components to create a room. You can find default components in the prefabs folder.");
-                    return;
-                }
-
                 SpawnNewRoom();
             }
+        }
+        
+        private Bounds GetBoundsOfPrefab(GameObject prefab, RoomElementTyp type)
+        {
+            MeshRenderer meshRenderer = prefab.GetComponentInChildren<MeshRenderer>();
+            
+            if (meshRenderer == null)
+            {
+                throw new MissingComponentException("Room elements are expected to contain a mesh renderer. The " + type.ToString() + " prefab doesn't seem to have a mesh renderer in it's hierarchy. Please add one.");
+            }
+
+            return meshRenderer.bounds;
+        }
+
+        private bool CheckBoundSizesCorrect(Bounds wallBounds, Bounds cornerBounds, Bounds floorBounds)
+        {
+            if (Mathf.Abs(wallBounds.size.x - floorBounds.size.x) > 0.01f)
+            {
+                EditorGUILayout.HelpBox("X-direction of wall and floor has to be the same size.", MessageType.Error);
+                return false;
+            }
+
+            if (Mathf.Abs(floorBounds.size.x - floorBounds.size.z) > 0.01f)
+            {
+                EditorGUILayout.HelpBox("Size of z-direction and x-direction needs to be the same for floor elements.", MessageType.Error);
+                return false;
+            }
+
+            if (Mathf.Abs(cornerBounds.size.x - cornerBounds.size.z) > 0.01f)
+            {
+                EditorGUILayout.HelpBox("Size of z-direction and x-direction needs to be the same for corner elements.", MessageType.Error);
+                return false;
+            }
+
+            if (Mathf.Abs(cornerBounds.size.x - wallBounds.size.z) > 0.01f)
+            {
+                EditorGUILayout.HelpBox("Size of z-direction of wall and size of x-direction of corner needs to be the same.", MessageType.Error);
+                return false;
+            }
+
+            return true;
+        }
+
+        private float AdaptRoomSize(float roomSize, float minRoomSize, float wallSize)
+        {
+            return wallSize * Mathf.FloorToInt((roomSize - minRoomSize) / wallSize) + minRoomSize;
         }
 
         private void SpawnNewRoom()
@@ -65,10 +138,10 @@ namespace UnityLevelEditor.RoomSpawning
                 return;
             }
 
-            var spawnInfo = GetSpawnInfo(wallSpawner.Bounds, cornerSpawner.Bounds);
-            var roomElements = new RoomElement[spawnInfo.NumberOfWalls.y + 2, spawnInfo.NumberOfWalls.x + 2];
+            SpawnInfo spawnInfo = GetSpawnInfo(wallSpawner.Bounds, cornerSpawner.Bounds);
+            RoomElement[,] roomElements = new RoomElement[spawnInfo.NumberOfWalls.y + 2, spawnInfo.NumberOfWalls.x + 2];
 
-            var room = new GameObject(roomName);
+            GameObject room = new GameObject(roomName);
             SpawnFrontOrBackOfRoom(spawnInfo, wallSpawner, cornerSpawner, roomElements, room.transform, false);
             SpawnRoomCenter(spawnInfo, wallSpawner, floorSpawner, roomElements, room.transform);
             SpawnFrontOrBackOfRoom(spawnInfo, wallSpawner, cornerSpawner, roomElements, room.transform, true);

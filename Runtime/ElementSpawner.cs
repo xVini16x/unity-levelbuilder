@@ -18,11 +18,6 @@ namespace UnityLevelEditor
 
             var meshRenderer = toInstantiate.GetComponentInChildren<MeshRenderer>();
 
-            if (meshRenderer == null)
-            {
-                throw new MissingComponentException("Room elements are expected to contain a mesh renderer. The " + type.ToString() + " prefab doesn't seem to have a mesh renderer in it's hierachy. Please add one.");
-            }
-
             Bounds = meshRenderer.bounds;
             var sizeRotatedSideways = Bounds.size;
             sizeRotatedSideways.x = Bounds.size.z;
