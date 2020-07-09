@@ -1,159 +1,174 @@
 ﻿using UnityEngine;
 using UnityEditor;
+using UnityLevelEditor.Model;
 
-public class RoomSpawner : EditorWindow
+namespace UnityLevelEditor.RoomSpawning
 {
-    [SerializeField] private GameObject wall;
-    [SerializeField] private GameObject floor;
-    [SerializeField] private GameObject corner;
-    [SerializeField] private string roomName = "StandardRoom";
-    [SerializeField] private Vector2Int roomSize = new Vector2Int(1, 1);
-
-
-    // Add menu named "My Window" to the Window menu
-    [MenuItem("Window/Unity Levelbuilder Tool")]
-    static void Init()
+    public class RoomSpawner : EditorWindow
     {
-        // Get existing open window or if none, make a new one:
-        RoomSpawner window = (RoomSpawner) EditorWindow.GetWindow(typeof(RoomSpawner));
-        window.Show();
-    }
+        [SerializeField] private GameObject wall;
+        [SerializeField] private GameObject floor;
+        [SerializeField] private GameObject corner;
+        [SerializeField] private string roomName = "StandardRoom";
+        [SerializeField] private Vector2Int roomSize = new Vector2Int(1, 1);
 
-    void OnGUI()
-    {
-        GUILayout.Label("Room Components", EditorStyles.boldLabel);
-        wall = EditorGUILayout.ObjectField("Wall Prefab", wall, typeof(GameObject), true) as GameObject;
-        floor = EditorGUILayout.ObjectField("Floor Prefab", floor, typeof(GameObject), true) as GameObject;
-        corner = EditorGUILayout.ObjectField("Corner Prefab", corner, typeof(GameObject), true) as GameObject;
-        GUILayout.Label("Room Settings", EditorStyles.boldLabel);
-        roomName = EditorGUILayout.TextField("Name", roomName);
-        roomSize = EditorGUILayout.Vector2IntField("Room Size", roomSize);
-        
-        if (GUILayout.Button("Create Room"))
+        // Add menu named "My Window" to the Window menu
+        [MenuItem("Window/Unity Levelbuilder Tool")]
+        static void Init()
         {
-            if (roomName == null)
+            // Get existing open window or if none, make a new one:
+            RoomSpawner window = (RoomSpawner) EditorWindow.GetWindow(typeof(RoomSpawner));
+            window.Show();
+        }
+
+        void OnGUI()
+        {
+            GUILayout.Label("Room Components", EditorStyles.boldLabel);
+            wall = EditorGUILayout.ObjectField("Wall Prefab", wall, typeof(GameObject), true) as GameObject;
+            floor = EditorGUILayout.ObjectField("Floor Prefab", floor, typeof(GameObject), true) as GameObject;
+            corner = EditorGUILayout.ObjectField("Corner Prefab", corner, typeof(GameObject), true) as GameObject;
+            GUILayout.Label("Room Settings", EditorStyles.boldLabel);
+            roomName = EditorGUILayout.TextField("Name", roomName);
+            roomSize = EditorGUILayout.Vector2IntField("Room Size", roomSize);
+
+            if (GUILayout.Button("Create Room"))
             {
-                Debug.LogError("Roomname cannot be empty.");
+                if (roomName == null)
+                {
+                    Debug.LogError("Roomname cannot be empty.");
+                    return;
+                }
+
+                if (wall == null || floor == null || corner == null)
+                {
+                    Debug.LogError("Please assign all components to create a room. You can find default components in the prefabs folder.");
+                    return;
+                }
+
+                SpawnNewRoom();
+            }
+        }
+
+        private void SpawnNewRoom()
+        {
+            ElementSpawner wallSpawner, cornerSpawner, floorSpawner;
+
+            try
+            {
+                wallSpawner = new ElementSpawner(wall, RoomElementTyp.Wall);
+                cornerSpawner = new ElementSpawner(corner, RoomElementTyp.Corner);
+                floorSpawner = new ElementSpawner(floor, RoomElementTyp.Floor);
+            }
+            catch (MissingComponentException e)
+            {
+                Debug.LogError(e.Message);
                 return;
             }
 
-            if (wall == null || floor == null || corner == null)
+            var spawnInfo = GetSpawnInfo(wallSpawner.Bounds, cornerSpawner.Bounds);
+            var roomElements = new RoomElement[spawnInfo.NumberOfWalls.y + 2, spawnInfo.NumberOfWalls.x + 2];
+
+            var room = new GameObject(roomName);
+            SpawnFrontOrBackOfRoom(spawnInfo, wallSpawner, cornerSpawner, roomElements, room.transform, false);
+            SpawnRoomCenter(spawnInfo, wallSpawner, floorSpawner, roomElements, room.transform);
+            SpawnFrontOrBackOfRoom(spawnInfo, wallSpawner, cornerSpawner, roomElements, room.transform, true);
+            Debug.Log("Room created");
+        }
+
+        private SpawnInfo GetSpawnInfo(Bounds wallMeshBounds, Bounds cornerMeshBounds)
+        {
+            var wallSize = wallMeshBounds.size;
+            var cornerSize = cornerMeshBounds.size;
+
+            var actualRoomSize = new Vector3();
+            var numberOfWalls = new Vector2Int();
+
+            var numberOfWallsAndRoomSize = CalculateNumberOfWallsAndRoomSize(this.roomSize.x, wallSize.x, cornerSize.x, "x");
+            actualRoomSize.x = numberOfWallsAndRoomSize.roomSize;
+            numberOfWalls.x = numberOfWallsAndRoomSize.numberOfWalls;
+
+            numberOfWallsAndRoomSize = CalculateNumberOfWallsAndRoomSize(this.roomSize.y, wallSize.x, cornerSize.z, "z");
+            actualRoomSize.z = numberOfWallsAndRoomSize.roomSize;
+            numberOfWalls.y = numberOfWallsAndRoomSize.numberOfWalls;
+
+            actualRoomSize.y = wallMeshBounds.size.y;
+
+            return new SpawnInfo(Vector3.zero, actualRoomSize, numberOfWalls);
+        }
+
+        private (int numberOfWalls, float roomSize) CalculateNumberOfWallsAndRoomSize(float unitsToFill, float wallSize, float cornerSize, string dimensionName)
+        {
+            // Guarantees to generate a room as big or smaller than the configured room size (0.01f tolerance to avoid problems due to floating point imprecision)
+            var numberOfWalls = (int) ((unitsToFill + 0.01f - (2f * cornerSize)) / wallSize);
+
+            if (numberOfWalls == 0)
             {
-                Debug.LogError("Please assign all components to create a room. You can find default components in the prefabs folder.");
-                return;
+                Debug.LogWarning($"{dimensionName.ToUpper()}-Dimension was too small. At least one wall should be spawned. Room will therefore will be bigger than given {dimensionName.ToLower()}-value.");
+                numberOfWalls = 1;
             }
 
-            SpawnNewRoom();
-        }
-    }
-
-    private void SpawnNewRoom()
-    {
-        ElementSpawner wallSpawner, cornerSpawner, floorSpawner;
-
-        try
-        {
-            wallSpawner = new ElementSpawner(wall, RoomElementTyp.Wall);
-            cornerSpawner = new ElementSpawner(corner, RoomElementTyp.Corner);
-            floorSpawner = new ElementSpawner(floor, RoomElementTyp.Floor);
-        }
-        catch (MissingComponentException e)
-        {
-            Debug.LogError(e.Message);
-            return;
+            return (numberOfWalls, 2f * cornerSize + (numberOfWalls * wallSize));
         }
 
-        var spawnInfo = GetSpawnInfo(wallSpawner.Bounds, cornerSpawner.Bounds);
-        var roomElements = new RoomElement[spawnInfo.NumberOfWalls.y + 2, spawnInfo.NumberOfWalls.x + 2];
-        
-        var room = new GameObject(roomName);
-        SpawnFrontOrBackOfRoom(spawnInfo, wallSpawner, cornerSpawner, roomElements, room.transform, false);
-        SpawnRoomCenter(spawnInfo, wallSpawner, floorSpawner, roomElements, room.transform);
-        SpawnFrontOrBackOfRoom(spawnInfo, wallSpawner, cornerSpawner, roomElements, room.transform, true);
-        Debug.Log("Room created");
-    }
-
-    private SpawnInfo GetSpawnInfo(Bounds wallMeshBounds, Bounds cornerMeshBounds)
-    {
-        var wallSize = wallMeshBounds.size;
-        var cornerSize = cornerMeshBounds.size;
-
-        var actualRoomSize = new Vector3();
-        var numberOfWalls = new Vector2Int();
-
-        var numberOfWallsAndRoomSize = CalculateNumberOfWallsAndRoomSize(this.roomSize.x, wallSize.x, cornerSize.x, "x");
-        actualRoomSize.x = numberOfWallsAndRoomSize.roomSize;
-        numberOfWalls.x = numberOfWallsAndRoomSize.numberOfWalls;
-
-        numberOfWallsAndRoomSize = CalculateNumberOfWallsAndRoomSize(this.roomSize.y, wallSize.x, cornerSize.z, "z");
-        actualRoomSize.z = numberOfWallsAndRoomSize.roomSize;
-        numberOfWalls.y = numberOfWallsAndRoomSize.numberOfWalls;
-
-        actualRoomSize.y = wallMeshBounds.size.y;
-
-        return new SpawnInfo(Vector3.zero, actualRoomSize, numberOfWalls);
-    }
-
-    private (int numberOfWalls, float roomSize) CalculateNumberOfWallsAndRoomSize(float unitsToFill, float wallSize, float cornerSize, string dimensionName)
-    {
-        // Guarantees to generate a room as big or smaller than the configured room size (0.01f tolerance to avoid problems due to floating point imprecision)
-        var numberOfWalls = (int) ((unitsToFill + 0.01f - (2f * cornerSize)) / wallSize);
-
-        if (numberOfWalls == 0)
+        private void SpawnFrontOrBackOfRoom(SpawnInfo spawnInfo, ElementSpawner wallSpawner, ElementSpawner cornerSpawner, RoomElement[,] roomElements, Transform parent, bool isBackWall)
         {
-            Debug.LogWarning($"{dimensionName.ToUpper()}-Dimension was too small. At least one wall should be spawned. Room will therefore will be bigger than given {dimensionName.ToLower()}-value.");
-            numberOfWalls = 1;
-        }
+            Vector3 currentSpawnPos;
+            Vector2Int indices;
+            SpawnOrientation wallOrientation;
+            SpawnOrientation firstCornerOrientation;
+            SpawnOrientation secondCornerOrientation;
 
-        return (numberOfWalls, 2f * cornerSize + (numberOfWalls * wallSize));
-    }
+            RoomElement newRoomElement;
+            Vector3 spawnedElementSize;
 
-    private void SpawnFrontOrBackOfRoom(SpawnInfo spawnInfo, ElementSpawner wallSpawner, ElementSpawner cornerSpawner, RoomElement[,] roomElements, Transform parent, bool isBackWall)
-    {
-        Vector3 currentSpawnPos;
-        Vector2Int indices;
-        SpawnOrientation wallOrientation;
-        SpawnOrientation firstCornerOrientation;
-        SpawnOrientation secondCornerOrientation;
+            if (isBackWall)
+            {
+                indices = new Vector2Int(0, roomElements.GetLength(0) - 1);
+                wallOrientation = SpawnOrientation.Back;
+                firstCornerOrientation = SpawnOrientation.Left;
+                secondCornerOrientation = wallOrientation;
+                currentSpawnPos = spawnInfo.RoomBounds.min;
+                currentSpawnPos = cornerSpawner.ConvertLeftBottomBackPositionToLeftBottomCenterPosition(currentSpawnPos, wallOrientation);
+            }
+            else
+            {
+                indices = new Vector2Int(0, 0);
+                wallOrientation = SpawnOrientation.Front;
+                firstCornerOrientation = wallOrientation;
+                secondCornerOrientation = SpawnOrientation.Right;
+                currentSpawnPos = spawnInfo.RoomBounds.min;
+                currentSpawnPos.z = spawnInfo.RoomBounds.max.z;
+                currentSpawnPos = cornerSpawner.ConvertLeftBottomFrontPositionToLeftBottomCenterPosition(currentSpawnPos, wallOrientation);
+            }
 
-        RoomElement newRoomElement;
-        Vector3 spawnedElementSize;
-        
-        if (isBackWall)
-        {
-            indices = new Vector2Int(0, roomElements.GetLength(0) - 1);
-            wallOrientation = SpawnOrientation.Back;
-            firstCornerOrientation = SpawnOrientation.Left;
-            secondCornerOrientation = wallOrientation;
-            currentSpawnPos = spawnInfo.RoomBounds.min;
-            currentSpawnPos = cornerSpawner.ConvertLeftBottomBackPositionToLeftBottomCenterPosition(currentSpawnPos, wallOrientation);
-        }
-        else
-        {
-            indices = new Vector2Int(0, 0);
-            wallOrientation = SpawnOrientation.Front;
-            firstCornerOrientation = wallOrientation;
-            secondCornerOrientation = SpawnOrientation.Right;
-            currentSpawnPos = spawnInfo.RoomBounds.min;
-            currentSpawnPos.z = spawnInfo.RoomBounds.max.z;
-            currentSpawnPos = cornerSpawner.ConvertLeftBottomFrontPositionToLeftBottomCenterPosition(currentSpawnPos, wallOrientation);
-        }
-        
-        (newRoomElement, spawnedElementSize) = cornerSpawner.SpawnByLeftBottomCenter(currentSpawnPos, firstCornerOrientation, parent,$"({indices.y}, {indices.x})");
-        currentSpawnPos.x += spawnedElementSize.x;
-        roomElements[indices.y, indices.x] = newRoomElement;
-
-        if (isBackWall)
-        {
-            ConnectFrontElement(newRoomElement, roomElements, indices);
-        }
-
-        indices.x++;
-
-        for (; indices.x < roomElements.GetLength(1) - 1; indices.x++)
-        {
-            (newRoomElement, spawnedElementSize) = wallSpawner.SpawnByLeftBottomCenter(currentSpawnPos, wallOrientation, parent, $"({indices.y}, {indices.x})");
+            (newRoomElement, spawnedElementSize) = cornerSpawner.SpawnByLeftBottomCenter(currentSpawnPos, firstCornerOrientation, parent, $"({indices.y}, {indices.x})");
             currentSpawnPos.x += spawnedElementSize.x;
+            roomElements[indices.y, indices.x] = newRoomElement;
+
+            if (isBackWall)
+            {
+                ConnectFrontElement(newRoomElement, roomElements, indices);
+            }
+
+            indices.x++;
+
+            for (; indices.x < roomElements.GetLength(1) - 1; indices.x++)
+            {
+                (newRoomElement, spawnedElementSize) = wallSpawner.SpawnByLeftBottomCenter(currentSpawnPos, wallOrientation, parent, $"({indices.y}, {indices.x})");
+                currentSpawnPos.x += spawnedElementSize.x;
+                roomElements[indices.y, indices.x] = newRoomElement;
+
+                if (isBackWall)
+                {
+                    ConnectFrontAndLeftElement(newRoomElement, roomElements, indices);
+                }
+                else
+                {
+                    ConnectLeftElement(newRoomElement, roomElements, indices);
+                }
+            }
+
+            (newRoomElement, _) = cornerSpawner.SpawnByLeftBottomCenter(currentSpawnPos, secondCornerOrientation, parent, $"({indices.y}, {indices.x})");
             roomElements[indices.y, indices.x] = newRoomElement;
 
             if (isBackWall)
@@ -165,177 +180,70 @@ public class RoomSpawner : EditorWindow
                 ConnectLeftElement(newRoomElement, roomElements, indices);
             }
         }
-        
-        (newRoomElement, _) = cornerSpawner.SpawnByLeftBottomCenter(currentSpawnPos, secondCornerOrientation, parent, $"({indices.y}, {indices.x})");
-        roomElements[indices.y, indices.x] = newRoomElement;
 
-        if (isBackWall)
+        private void SpawnRoomCenter(SpawnInfo spawnInfo, ElementSpawner wallSpawner, ElementSpawner floorSpawner, RoomElement[,] roomElements, Transform parent)
         {
-            ConnectFrontAndLeftElement(newRoomElement, roomElements, indices);
-        }
-        else
-        {
-            ConnectLeftElement(newRoomElement, roomElements, indices);
-        }
-    }
+            RoomElement newRoomElement;
+            Vector3 spawnedElementSize;
+            Vector3 currentSpawnPos = spawnInfo.RoomBounds.min;
+            currentSpawnPos.z += spawnInfo.RoomBounds.size.z - wallSpawner.Bounds.size.z;
+            currentSpawnPos = wallSpawner.ConvertLeftBottomFrontPositionToLeftBottomCenterPosition(currentSpawnPos, SpawnOrientation.Left);
+            Vector2Int indices = new Vector2Int(0, 1);
 
-    private void SpawnRoomCenter(SpawnInfo spawnInfo, ElementSpawner wallSpawner, ElementSpawner floorSpawner, RoomElement[,] roomElements, Transform parent)
-    {
-        RoomElement newRoomElement;
-        Vector3 spawnedElementSize;
-        Vector3 currentSpawnPos = spawnInfo.RoomBounds.min;
-        currentSpawnPos.z += spawnInfo.RoomBounds.size.z - wallSpawner.Bounds.size.z;
-        currentSpawnPos = wallSpawner.ConvertLeftBottomFrontPositionToLeftBottomCenterPosition(currentSpawnPos, SpawnOrientation.Left);
-        Vector2Int indices = new Vector2Int(0, 1);
-        
-        for ( ; indices.y < roomElements.GetLength(0) - 1; indices.y++)
-        {
-     
-            (newRoomElement, spawnedElementSize) = wallSpawner.SpawnByLeftBottomCenter(currentSpawnPos, SpawnOrientation.Left, parent, $"({indices.y}, {indices.x})");
-            currentSpawnPos.x += spawnedElementSize.x;
-            roomElements[indices.y, indices.x] = newRoomElement;
-            ConnectFrontElement(newRoomElement, roomElements, indices);
-            indices.x++;
-
-            for (; indices.x < roomElements.GetLength(1) - 1; indices.x++)
+            for (; indices.y < roomElements.GetLength(0) - 1; indices.y++)
             {
-                (newRoomElement, spawnedElementSize) = floorSpawner.SpawnByLeftBottomCenter(currentSpawnPos, SpawnOrientation.Front, parent, $"({indices.y}, {indices.x})");
+
+                (newRoomElement, spawnedElementSize) = wallSpawner.SpawnByLeftBottomCenter(currentSpawnPos, SpawnOrientation.Left, parent, $"({indices.y}, {indices.x})");
+                currentSpawnPos.x += spawnedElementSize.x;
+                roomElements[indices.y, indices.x] = newRoomElement;
+                ConnectFrontElement(newRoomElement, roomElements, indices);
+                indices.x++;
+
+                for (; indices.x < roomElements.GetLength(1) - 1; indices.x++)
+                {
+                    (newRoomElement, spawnedElementSize) = floorSpawner.SpawnByLeftBottomCenter(currentSpawnPos, SpawnOrientation.Front, parent, $"({indices.y}, {indices.x})");
+                    currentSpawnPos.x += spawnedElementSize.x;
+                    roomElements[indices.y, indices.x] = newRoomElement;
+                    ConnectFrontAndLeftElement(newRoomElement, roomElements, indices);
+                }
+
+                (newRoomElement, spawnedElementSize) = wallSpawner.SpawnByLeftBottomCenter(currentSpawnPos, SpawnOrientation.Right, parent, $"({indices.y}, {indices.x})");
                 currentSpawnPos.x += spawnedElementSize.x;
                 roomElements[indices.y, indices.x] = newRoomElement;
                 ConnectFrontAndLeftElement(newRoomElement, roomElements, indices);
+                indices.x = 0;
+                currentSpawnPos.x = spawnInfo.RoomBounds.min.x;
+                currentSpawnPos.z -= spawnedElementSize.z;
             }
-            
-            (newRoomElement, spawnedElementSize) = wallSpawner.SpawnByLeftBottomCenter(currentSpawnPos, SpawnOrientation.Right, parent, $"({indices.y}, {indices.x})");
-            currentSpawnPos.x += spawnedElementSize.x;
-            roomElements[indices.y, indices.x] = newRoomElement;
-            ConnectFrontAndLeftElement(newRoomElement, roomElements, indices);
-            indices.x = 0;
-            currentSpawnPos.x = spawnInfo.RoomBounds.min.x;
-            currentSpawnPos.z -= spawnedElementSize.z;
         }
-    }
-    
 
-    private void ConnectFrontAndLeftElement(RoomElement newElement, RoomElement[,] roomElements, Vector2Int indices)
-    {
-        ConnectLeftElement(newElement, roomElements, indices);
-        ConnectFrontElement(newElement, roomElements, indices);
-    }
 
-    private void ConnectFrontElement(RoomElement newElement, RoomElement[,] roomElements, Vector2Int indices)
-    {
-        newElement.ConnectFrontElement(roomElements[indices.y - 1, indices.x]);
-    }
-
-    private void ConnectLeftElement(RoomElement newElement, RoomElement[,] roomElements, Vector2Int indices)
-    {
-        newElement.ConnectLeftElement(roomElements[indices.y, indices.x - 1]);
-    }
-
-    private class SpawnInfo
-    {
-        public Bounds RoomBounds { get; }
-        public Vector2Int NumberOfWalls { get; }
-
-        public SpawnInfo(Vector3 center, Vector3 roomSize, Vector2Int numberOfWalls)
+        private void ConnectFrontAndLeftElement(RoomElement newElement, RoomElement[,] roomElements, Vector2Int indices)
         {
-            NumberOfWalls = numberOfWalls;
-            RoomBounds = new Bounds(center, roomSize);
+            ConnectLeftElement(newElement, roomElements, indices);
+            ConnectFrontElement(newElement, roomElements, indices);
         }
-    }
 
-    private class ElementSpawner
-    {
-        public Bounds Bounds { get; }
-        private Bounds SidewaysRotatedBounds { get; }
-        private readonly GameObject toInstantiate;
-        private readonly RoomElementTyp type;
-
-        public ElementSpawner(GameObject toInstantiate, RoomElementTyp type)
+        private void ConnectFrontElement(RoomElement newElement, RoomElement[,] roomElements, Vector2Int indices)
         {
-            this.toInstantiate = toInstantiate;
-            this.type = type;
+            newElement.ConnectFrontElement(roomElements[indices.y - 1, indices.x]);
+        }
 
-            var meshRenderer = toInstantiate.GetComponentInChildren<MeshRenderer>();
+        private void ConnectLeftElement(RoomElement newElement, RoomElement[,] roomElements, Vector2Int indices)
+        {
+            newElement.ConnectLeftElement(roomElements[indices.y, indices.x - 1]);
+        }
 
-            if (meshRenderer == null)
+        private class SpawnInfo
+        {
+            public Bounds RoomBounds { get; }
+            public Vector2Int NumberOfWalls { get; }
+
+            public SpawnInfo(Vector3 center, Vector3 roomSize, Vector2Int numberOfWalls)
             {
-                throw new MissingComponentException("Room elements are expected to contain a mesh renderer. The " + type.ToString() + " prefab doesn't seem to have a mesh renderer in it's hierachy. Please add one.");
+                NumberOfWalls = numberOfWalls;
+                RoomBounds = new Bounds(center, roomSize);
             }
-
-            Bounds = meshRenderer.bounds;
-            var sizeRotatedSideways = Bounds.size;
-            sizeRotatedSideways.x = Bounds.size.z;
-            sizeRotatedSideways.z = Bounds.size.x;
-            SidewaysRotatedBounds = new Bounds(Bounds.center, sizeRotatedSideways);
         }
-
-        public Vector3 ConvertLeftBottomFrontPositionToLeftBottomCenterPosition(Vector3 position, SpawnOrientation orientation)
-        {
-            var applicableBounds = orientation.IsSideways() ? SidewaysRotatedBounds : Bounds;
-            position.z -= applicableBounds.extents.z;
-            return position;
-        }
-
-        public Vector3 ConvertLeftBottomBackPositionToLeftBottomCenterPosition(Vector3 position, SpawnOrientation orientation)
-        {
-            var applicableBounds = orientation.IsSideways() ? SidewaysRotatedBounds : Bounds;
-            position.z += applicableBounds.extents.z;
-            return position;
-        }
-
-        public (RoomElement roomElement, Vector3 dimensions) SpawnByLeftBottomCenter(Vector3 position, SpawnOrientation orientation, Transform parent, string name)
-        {
-            var applicableBounds = orientation.IsSideways() ? SidewaysRotatedBounds : Bounds;
-            position.x += applicableBounds.extents.x;
-            position.y += applicableBounds.extents.y;
-
-            return (Spawn(position, orientation.ToAngle(), parent, name), applicableBounds.size);
-        }
-
-        private RoomElement Spawn(Vector3 position, float angle, Transform parent, string name)
-        {
-            var spawnedObject = (GameObject) PrefabUtility.InstantiatePrefab(toInstantiate, parent);
-            spawnedObject.name = name;
-            spawnedObject.transform.position = position;
-            var roomElement = spawnedObject.AddComponent<RoomElement>();
-            if (Mathf.Abs(angle) > 0.01f)
-            {
-                spawnedObject.transform.Rotate(Vector3.up, angle);
-            }
-            
-            roomElement.Type = type;
-            return roomElement;
-        }
-    }
-}
-
-public enum SpawnOrientation
-{
-    Front,
-    Right, 
-    Left, 
-    Back
-}
-
-public static class Utility
-{
-    public static float ToAngle(this SpawnOrientation orientation)
-    {
-        switch(orientation)
-        {
-            case SpawnOrientation.Front: return 0f;
-            case SpawnOrientation.Right: return 90f;
-            case SpawnOrientation.Back: return 180f;
-            case SpawnOrientation.Left: return 270f;
-            default:
-                Debug.LogError($"Not supported orientation {orientation}.");
-                return 0f;
-        }
-    }
-
-    public static bool IsSideways(this SpawnOrientation orientation)
-    {
-        return orientation == SpawnOrientation.Left || orientation == SpawnOrientation.Right;
     }
 }

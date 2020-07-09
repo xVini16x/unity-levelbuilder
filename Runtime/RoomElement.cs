@@ -1,47 +1,43 @@
 ﻿using UnityEngine;
 
-public class RoomElement : MonoBehaviour
+namespace UnityLevelEditor.Model
 {
-    [SerializeField] private RoomElementTyp type;
-    [SerializeField] private RoomElement elementFront;
-    [SerializeField] private RoomElement elementLeft;
-    [SerializeField] private RoomElement elementBack;
-    [SerializeField] private RoomElement elementRight;
-
-    public RoomElementTyp Type
+    public class RoomElement : MonoBehaviour
     {
-        get => type;
-        set => type = value;
-    }
-    
-    public void ConnectLeftElement(RoomElement left)
-    {
-        elementLeft = left;
-        left.elementRight = this;
-    }
+        [SerializeField] private RoomElementTyp type;
+        [SerializeField] private RoomElement elementFront;
+        [SerializeField] private RoomElement elementLeft;
+        [SerializeField] private RoomElement elementBack;
+        [SerializeField] private RoomElement elementRight;
 
-    public void ConnectBackElement(RoomElement back)
-    {
-        elementBack = back;
-        back.elementFront = this;
-    }
+        public RoomElementTyp Type
+        {
+            get => type;
+            set => type = value;
+        }
 
-    public void ConnectRightElement(RoomElement right)
-    {
-        elementRight = right;
-        right.elementLeft = this;
-    }
+        public void ConnectLeftElement(RoomElement left)
+        {
+            elementLeft = left;
+            left.elementRight = this;
+        }
 
-    public void ConnectFrontElement(RoomElement front)
-    {
-        elementFront = front;
-        front.elementBack = this;
-    }
-}
+        public void ConnectBackElement(RoomElement back)
+        {
+            elementBack = back;
+            back.elementFront = this;
+        }
 
-public enum RoomElementTyp
-{
-    Wall,
-    Floor,
-    Corner
+        public void ConnectRightElement(RoomElement right)
+        {
+            elementRight = right;
+            right.elementLeft = this;
+        }
+
+        public void ConnectFrontElement(RoomElement front)
+        {
+            elementFront = front;
+            front.elementBack = this;
+        }
+    }
 }
