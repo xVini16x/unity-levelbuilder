@@ -1,12 +1,8 @@
 ﻿using UnityEngine;
 using UnityEditor;
-using UnityEngine.Tilemaps;
 
 public class RoomSpawner : EditorWindow
 {
-    private const string AssetPath = "Assets/_GameAssets/Data/";
-    private const string FileFormat = ".asset";
-
     [SerializeField] private GameObject wall;
     [SerializeField] private GameObject floor;
     [SerializeField] private GameObject corner;
@@ -41,12 +37,6 @@ public class RoomSpawner : EditorWindow
                 return;
             }
 
-            if (AssetDatabase.LoadAssetAtPath(AssetPath + "/" + roomName + ".asset", typeof(RoomData)) != null)
-            {
-                Debug.LogError("Roomname already in use.");
-                return;
-            }
-
             if (wall == null || floor == null || corner == null)
             {
                 Debug.LogError("Please assign all components to create a room. You can find default components in the prefabs folder.");
@@ -60,7 +50,7 @@ public class RoomSpawner : EditorWindow
     private void SpawnNewRoom()
     {
         ElementSpawner wallSpawner, cornerSpawner, floorSpawner;
-        
+
         try
         {
             wallSpawner = new ElementSpawner(wall, RoomElementTyp.Wall);
@@ -72,55 +62,15 @@ public class RoomSpawner : EditorWindow
             Debug.LogError(e.Message);
             return;
         }
-        
+
         var spawnInfo = GetSpawnInfo(wallSpawner.Bounds, cornerSpawner.Bounds);
         var roomElements = new RoomElement[spawnInfo.NumberOfWalls.y + 2, spawnInfo.NumberOfWalls.x + 2];
-
-        RoomData roomData = ScriptableObject.CreateInstance<RoomData>();
-        var room = new GameObject(roomName);
-        SpawnFrontOrBackOfRoom(spawnInfo, wallSpawner, cornerSpawner, roomElements, roomData, room.transform,false);
-        SpawnRoomCenter(spawnInfo, wallSpawner, floorSpawner, roomElements, roomData, room.transform);
-        SpawnFrontOrBackOfRoom(spawnInfo, wallSpawner, cornerSpawner, roomElements, roomData, room.transform, true);
         
-        AssetDatabase.CreateAsset(roomData, AssetPath + roomName + FileFormat);
-        AssetDatabase.SaveAssets();
-        RoomDataComponent roomDataComponent = room.AddComponent<RoomDataComponent>();
-        roomDataComponent.roomData = roomData;
+        var room = new GameObject(roomName);
+        SpawnFrontOrBackOfRoom(spawnInfo, wallSpawner, cornerSpawner, roomElements, room.transform, false);
+        SpawnRoomCenter(spawnInfo, wallSpawner, floorSpawner, roomElements, room.transform);
+        SpawnFrontOrBackOfRoom(spawnInfo, wallSpawner, cornerSpawner, roomElements, room.transform, true);
         Debug.Log("Room created");
-    }
-
-    private RoomElement CreateRoomElement(string name, Vector3 position, RoomElementTyp type, float rotationAngle, Transform parent)
-    {
-        GameObject prefab;
-
-        switch (type)
-        {
-            case RoomElementTyp.Corner:
-                prefab = corner;
-                break;
-            case RoomElementTyp.Wall:
-                prefab = wall;
-                break;
-            case RoomElementTyp.Floor:
-                prefab = floor;
-                break;
-            default:
-                Debug.LogError($"Unsupported Room Type '{type}' - Fallback to Wall");
-                prefab = wall;
-                break;
-        }
-
-        GameObject spawnedObject = Instantiate(prefab, parent);
-        spawnedObject.name = name;
-        spawnedObject.transform.position = position;
-        var guidComp = spawnedObject.AddComponent<PersistentInstanceId>();
-        if (Mathf.Abs(rotationAngle) > 0.01f)
-            spawnedObject.transform.Rotate(Vector3.up, rotationAngle);
-
-        RoomElement roomElement = new RoomElement();
-        roomElement.Type = type;
-        roomElement.Guid = guidComp.Guid;
-        return roomElement;
     }
 
     private SpawnInfo GetSpawnInfo(Bounds wallMeshBounds, Bounds cornerMeshBounds)
@@ -128,20 +78,20 @@ public class RoomSpawner : EditorWindow
         var wallSize = wallMeshBounds.size;
         var cornerSize = cornerMeshBounds.size;
 
-        var roomSize = new Vector3();
+        var actualRoomSize = new Vector3();
         var numberOfWalls = new Vector2Int();
 
         var numberOfWallsAndRoomSize = CalculateNumberOfWallsAndRoomSize(this.roomSize.x, wallSize.x, cornerSize.x, "x");
-        roomSize.x = numberOfWallsAndRoomSize.roomSize;
+        actualRoomSize.x = numberOfWallsAndRoomSize.roomSize;
         numberOfWalls.x = numberOfWallsAndRoomSize.numberOfWalls;
 
         numberOfWallsAndRoomSize = CalculateNumberOfWallsAndRoomSize(this.roomSize.y, wallSize.x, cornerSize.z, "z");
-        roomSize.z = numberOfWallsAndRoomSize.roomSize;
+        actualRoomSize.z = numberOfWallsAndRoomSize.roomSize;
         numberOfWalls.y = numberOfWallsAndRoomSize.numberOfWalls;
 
-        roomSize.y = wallMeshBounds.size.y;
+        actualRoomSize.y = wallMeshBounds.size.y;
 
-        return new SpawnInfo(Vector3.zero, roomSize, numberOfWalls);
+        return new SpawnInfo(Vector3.zero, actualRoomSize, numberOfWalls);
     }
 
     private (int numberOfWalls, float roomSize) CalculateNumberOfWallsAndRoomSize(float unitsToFill, float wallSize, float cornerSize, string dimensionName)
@@ -158,7 +108,7 @@ public class RoomSpawner : EditorWindow
         return (numberOfWalls, 2f * cornerSize + (numberOfWalls * wallSize));
     }
 
-    private void SpawnFrontOrBackOfRoom(SpawnInfo spawnInfo, ElementSpawner wallSpawner, ElementSpawner cornerSpawner, RoomElement[,] roomElements, RoomData roomData, Transform parent, bool isBackWall)
+    private void SpawnFrontOrBackOfRoom(SpawnInfo spawnInfo, ElementSpawner wallSpawner, ElementSpawner cornerSpawner, RoomElement[,] roomElements, Transform parent, bool isBackWall)
     {
         Vector3 currentSpawnPos;
         Vector2Int indices;
@@ -192,7 +142,6 @@ public class RoomSpawner : EditorWindow
         (newRoomElement, spawnedElementSize) = cornerSpawner.SpawnByLeftBottomCenter(currentSpawnPos, firstCornerOrientation, parent,$"({indices.y}, {indices.x})");
         currentSpawnPos.x += spawnedElementSize.x;
         roomElements[indices.y, indices.x] = newRoomElement;
-        roomData.AddRoomElement(newRoomElement);
 
         if (isBackWall)
         {
@@ -206,7 +155,6 @@ public class RoomSpawner : EditorWindow
             (newRoomElement, spawnedElementSize) = wallSpawner.SpawnByLeftBottomCenter(currentSpawnPos, wallOrientation, parent, $"({indices.y}, {indices.x})");
             currentSpawnPos.x += spawnedElementSize.x;
             roomElements[indices.y, indices.x] = newRoomElement;
-            roomData.AddRoomElement(newRoomElement);
 
             if (isBackWall)
             {
@@ -220,8 +168,7 @@ public class RoomSpawner : EditorWindow
         
         (newRoomElement, _) = cornerSpawner.SpawnByLeftBottomCenter(currentSpawnPos, secondCornerOrientation, parent, $"({indices.y}, {indices.x})");
         roomElements[indices.y, indices.x] = newRoomElement;
-        roomData.AddRoomElement(newRoomElement);
-        
+
         if (isBackWall)
         {
             ConnectFrontAndLeftElement(newRoomElement, roomElements, indices);
@@ -232,7 +179,7 @@ public class RoomSpawner : EditorWindow
         }
     }
 
-    private void SpawnRoomCenter(SpawnInfo spawnInfo, ElementSpawner wallSpawner, ElementSpawner floorSpawner, RoomElement[,] roomElements, RoomData roomData, Transform parent)
+    private void SpawnRoomCenter(SpawnInfo spawnInfo, ElementSpawner wallSpawner, ElementSpawner floorSpawner, RoomElement[,] roomElements, Transform parent)
     {
         RoomElement newRoomElement;
         Vector3 spawnedElementSize;
@@ -247,7 +194,6 @@ public class RoomSpawner : EditorWindow
             (newRoomElement, spawnedElementSize) = wallSpawner.SpawnByLeftBottomCenter(currentSpawnPos, SpawnOrientation.Left, parent, $"({indices.y}, {indices.x})");
             currentSpawnPos.x += spawnedElementSize.x;
             roomElements[indices.y, indices.x] = newRoomElement;
-            roomData.AddRoomElement(newRoomElement);
             ConnectFrontElement(newRoomElement, roomElements, indices);
             indices.x++;
 
@@ -256,14 +202,12 @@ public class RoomSpawner : EditorWindow
                 (newRoomElement, spawnedElementSize) = floorSpawner.SpawnByLeftBottomCenter(currentSpawnPos, SpawnOrientation.Front, parent, $"({indices.y}, {indices.x})");
                 currentSpawnPos.x += spawnedElementSize.x;
                 roomElements[indices.y, indices.x] = newRoomElement;
-                roomData.AddRoomElement(newRoomElement);
                 ConnectFrontAndLeftElement(newRoomElement, roomElements, indices);
             }
             
             (newRoomElement, spawnedElementSize) = wallSpawner.SpawnByLeftBottomCenter(currentSpawnPos, SpawnOrientation.Right, parent, $"({indices.y}, {indices.x})");
             currentSpawnPos.x += spawnedElementSize.x;
             roomElements[indices.y, indices.x] = newRoomElement;
-            roomData.AddRoomElement(newRoomElement);
             ConnectFrontAndLeftElement(newRoomElement, roomElements, indices);
             indices.x = 0;
             currentSpawnPos.x = spawnInfo.RoomBounds.min.x;
@@ -303,9 +247,9 @@ public class RoomSpawner : EditorWindow
     private class ElementSpawner
     {
         public Bounds Bounds { get; }
-        private Bounds sidewaysRotatedBounds { get; }
-        private GameObject toInstantiate;
-        private RoomElementTyp type;
+        private Bounds SidewaysRotatedBounds { get; }
+        private readonly GameObject toInstantiate;
+        private readonly RoomElementTyp type;
 
         public ElementSpawner(GameObject toInstantiate, RoomElementTyp type)
         {
@@ -323,38 +267,29 @@ public class RoomSpawner : EditorWindow
             var sizeRotatedSideways = Bounds.size;
             sizeRotatedSideways.x = Bounds.size.z;
             sizeRotatedSideways.z = Bounds.size.x;
-            sidewaysRotatedBounds = new Bounds(Bounds.center, sizeRotatedSideways);
+            SidewaysRotatedBounds = new Bounds(Bounds.center, sizeRotatedSideways);
         }
 
         public Vector3 ConvertLeftBottomFrontPositionToLeftBottomCenterPosition(Vector3 position, SpawnOrientation orientation)
         {
-            var applicableBounds = orientation.IsSideways() ? sidewaysRotatedBounds : Bounds;
+            var applicableBounds = orientation.IsSideways() ? SidewaysRotatedBounds : Bounds;
             position.z -= applicableBounds.extents.z;
             return position;
         }
 
         public Vector3 ConvertLeftBottomBackPositionToLeftBottomCenterPosition(Vector3 position, SpawnOrientation orientation)
         {
-            var applicableBounds = orientation.IsSideways() ? sidewaysRotatedBounds : Bounds;
+            var applicableBounds = orientation.IsSideways() ? SidewaysRotatedBounds : Bounds;
             position.z += applicableBounds.extents.z;
             return position;
         }
 
         public (RoomElement roomElement, Vector3 dimensions) SpawnByLeftBottomCenter(Vector3 position, SpawnOrientation orientation, Transform parent, string name)
         {
-            var applicableBounds = orientation.IsSideways() ? sidewaysRotatedBounds : Bounds;
+            var applicableBounds = orientation.IsSideways() ? SidewaysRotatedBounds : Bounds;
             position.x += applicableBounds.extents.x;
             position.y += applicableBounds.extents.y;
 
-            return (Spawn(position, orientation.ToAngle(), parent, name), applicableBounds.size);
-        }
-
-        public (RoomElement roomElement, Vector3 dimensions) SpawnByBottomLeftBack(Vector3 position, SpawnOrientation orientation, Transform parent, string name)
-        {
-            var applicableBounds = orientation.IsSideways() ? sidewaysRotatedBounds : Bounds;
-            position.x += applicableBounds.extents.x;
-            position.y += applicableBounds.extents.y;
-            position.z += applicableBounds.extents.z;
             return (Spawn(position, orientation.ToAngle(), parent, name), applicableBounds.size);
         }
 
@@ -363,15 +298,13 @@ public class RoomSpawner : EditorWindow
             var spawnedObject = (GameObject) PrefabUtility.InstantiatePrefab(toInstantiate, parent);
             spawnedObject.name = name;
             spawnedObject.transform.position = position;
-            var guidComp = spawnedObject.AddComponent<PersistentInstanceId>();
+            var roomElement = spawnedObject.AddComponent<RoomElement>();
             if (Mathf.Abs(angle) > 0.01f)
             {
                 spawnedObject.transform.Rotate(Vector3.up, angle);
             }
-       
-            RoomElement roomElement = new RoomElement();
+            
             roomElement.Type = type;
-            roomElement.Guid = guidComp.Guid;
             return roomElement;
         }
     }
