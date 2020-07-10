@@ -11,14 +11,12 @@ namespace UnityLevelEditor
         private readonly GameObject toInstantiate;
         private readonly RoomElementTyp type;
 
-        public ElementSpawner(GameObject toInstantiate, RoomElementTyp type)
+        public ElementSpawner(GameObject toInstantiate, Bounds bounds, RoomElementTyp type)
         {
             this.toInstantiate = toInstantiate;
             this.type = type;
 
-            var meshRenderer = toInstantiate.GetComponentInChildren<MeshRenderer>();
-
-            Bounds = meshRenderer.bounds;
+            Bounds = bounds;
             var sizeRotatedSideways = Bounds.size;
             sizeRotatedSideways.x = Bounds.size.z;
             sizeRotatedSideways.z = Bounds.size.x;

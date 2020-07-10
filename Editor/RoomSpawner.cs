@@ -1,5 +1,4 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEditor;
 using UnityLevelEditor.Model;
 
@@ -7,13 +6,18 @@ namespace UnityLevelEditor.RoomSpawning
 {
     public class RoomSpawner : EditorWindow
     {
-        private const float roomSizeLimit = 200f;
+        private const float RoomSizeLimit = 200f;
+        
+        #region Inspector Fields
         [SerializeField] private GameObject wall;
         [SerializeField] private GameObject floor;
         [SerializeField] private GameObject corner;
         [SerializeField] private string roomName = "StandardRoom";
         [SerializeField] private Vector2 roomSize = new Vector2(1, 1);
+        #endregion
 
+        #region UI
+        #region Window Creation
         // Add menu named "My Window" to the Window menu
         [MenuItem("Window/Unity Levelbuilder Tool")]
         static void Init()
@@ -32,7 +36,7 @@ namespace UnityLevelEditor.RoomSpawning
             GUILayout.Label("Room Settings", EditorStyles.boldLabel);
             roomName = EditorGUILayout.TextField("Name", roomName);
 
-            if (wall == null || floor == null || corner == null)
+            if (!PrefabsAreAssigned())
             {
                 EditorGUILayout.HelpBox("Please assign all prefabs to create a room. You can find default prefabs in the prefabs folder.", MessageType.Warning);
                 return;
@@ -52,28 +56,47 @@ namespace UnityLevelEditor.RoomSpawning
                 return;
             }
 
-            if (!CheckBoundSizesCorrect(wallBounds, cornerBounds, floorBounds))
+            if (!CheckBoundSizesCorrect(wallBounds, cornerBounds, floorBounds, out var message))
             {
+                EditorGUILayout.HelpBox(message, MessageType.Error);
                 return;
             }
-            
+
+            var numberOfWalls = new Vector2Int();
+            // Calculate valid room sizes (in Unity Units) based on wall and corner size for creation of slider
             var minRoomSize = wallBounds.size.x + 2 * cornerBounds.size.x;
-            var maxRoomSize = AdaptRoomSize(roomSizeLimit, minRoomSize, wallBounds.size.x);
+            var (_, maxRoomSize) = CalculateNumberOfWallsAndRoomSize(RoomSizeLimit, wallBounds.size.x, minRoomSize);
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Room Size X");
-            roomSize.x = AdaptRoomSize(EditorGUILayout.Slider(roomSize.x, minRoomSize, maxRoomSize), minRoomSize, wallBounds.size.x);
+            (numberOfWalls.x, roomSize.x) = CalculateNumberOfWallsAndRoomSize(EditorGUILayout.Slider(roomSize.x, minRoomSize, maxRoomSize),wallBounds.size.x, minRoomSize);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Room Size Z");
-            roomSize.y = AdaptRoomSize(EditorGUILayout.Slider(roomSize.y, minRoomSize, maxRoomSize), minRoomSize, wallBounds.size.x);
+            (numberOfWalls.y, roomSize.y) = CalculateNumberOfWallsAndRoomSize(EditorGUILayout.Slider(roomSize.y, minRoomSize, maxRoomSize), wallBounds.size.x, minRoomSize);
             EditorGUILayout.EndHorizontal();
             
+            var roomSize3D = new Vector3(roomSize.x, wallBounds.size.y, roomSize.y);
+
             if (GUILayout.Button("Create Room"))
             {
-                SpawnNewRoom();
+                var spawnInfo = new SpawnInfo(Vector3.zero, roomSize3D, numberOfWalls);
+                SpawnNewRoom(spawnInfo, wallBounds, cornerBounds, floorBounds);
             }
+        }
+        #endregion
+
+        #region Validation
+        
+        private bool PrefabsAreAssigned()
+        {
+            if (wall == null || floor == null || corner == null)
+            {
+                return false;
+            }
+
+            return true;
         }
         
         private Bounds GetBoundsOfPrefab(GameObject prefab, RoomElementTyp type)
@@ -88,57 +111,57 @@ namespace UnityLevelEditor.RoomSpawning
             return meshRenderer.bounds;
         }
 
-        private bool CheckBoundSizesCorrect(Bounds wallBounds, Bounds cornerBounds, Bounds floorBounds)
+        private bool CheckBoundSizesCorrect(Bounds wallBounds, Bounds cornerBounds, Bounds floorBounds, out string message)
         {
             if (Mathf.Abs(wallBounds.size.x - floorBounds.size.x) > 0.01f)
             {
-                EditorGUILayout.HelpBox("X-direction of wall and floor has to be the same size.", MessageType.Error);
+                message = "X-direction of wall and floor has to be the same size.";
                 return false;
             }
 
             if (Mathf.Abs(floorBounds.size.x - floorBounds.size.z) > 0.01f)
             {
-                EditorGUILayout.HelpBox("Size of z-direction and x-direction needs to be the same for floor elements.", MessageType.Error);
+                message = "Size of z-direction and x-direction needs to be the same for floor elements.";
                 return false;
             }
 
             if (Mathf.Abs(cornerBounds.size.x - cornerBounds.size.z) > 0.01f)
             {
-                EditorGUILayout.HelpBox("Size of z-direction and x-direction needs to be the same for corner elements.", MessageType.Error);
+                message = "Size of z-direction and x-direction needs to be the same for corner elements.";
                 return false;
             }
 
             if (Mathf.Abs(cornerBounds.size.x - wallBounds.size.z) > 0.01f)
             {
-                EditorGUILayout.HelpBox("Size of z-direction of wall and size of x-direction of corner needs to be the same.", MessageType.Error);
+                message = "Size of z-direction of wall and size of x-direction of corner needs to be the same.";
                 return false;
             }
 
+            message = null;
             return true;
         }
-
-        private float AdaptRoomSize(float roomSize, float minRoomSize, float wallSize)
+        
+        private (int numberOfWalls, float roomSize) CalculateNumberOfWallsAndRoomSize(float desiredRoomSize, float wallSize, float minRoomSize)
         {
-            return wallSize * Mathf.FloorToInt((roomSize - minRoomSize) / wallSize) + minRoomSize;
+            var numberOfWalls = Mathf.FloorToInt((desiredRoomSize - minRoomSize) / wallSize);
+            var actualRoomSize = minRoomSize + (numberOfWalls * wallSize);
+            
+            return (++numberOfWalls, actualRoomSize);
         }
-
-        private void SpawnNewRoom()
+        
+        #endregion
+        #endregion
+        
+        #region Room Creation
+        #region Element Spawning
+        private void SpawnNewRoom(SpawnInfo spawnInfo, Bounds wallBounds, Bounds cornerBounds, Bounds floorBounds)
         {
             ElementSpawner wallSpawner, cornerSpawner, floorSpawner;
-
-            try
-            {
-                wallSpawner = new ElementSpawner(wall, RoomElementTyp.Wall);
-                cornerSpawner = new ElementSpawner(corner, RoomElementTyp.Corner);
-                floorSpawner = new ElementSpawner(floor, RoomElementTyp.Floor);
-            }
-            catch (MissingComponentException e)
-            {
-                Debug.LogError(e.Message);
-                return;
-            }
-
-            SpawnInfo spawnInfo = GetSpawnInfo(wallSpawner.Bounds, cornerSpawner.Bounds);
+            wallSpawner = new ElementSpawner(wall, wallBounds, RoomElementTyp.Wall);
+            cornerSpawner = new ElementSpawner(corner, cornerBounds, RoomElementTyp.Corner);
+            floorSpawner = new ElementSpawner(floor, floorBounds, RoomElementTyp.Floor);
+           
+            
             RoomElement[,] roomElements = new RoomElement[spawnInfo.NumberOfWalls.y + 2, spawnInfo.NumberOfWalls.x + 2];
 
             GameObject room = new GameObject(roomName);
@@ -150,40 +173,6 @@ namespace UnityLevelEditor.RoomSpawning
             Debug.Log("Room created");
         }
 
-        private SpawnInfo GetSpawnInfo(Bounds wallMeshBounds, Bounds cornerMeshBounds)
-        {
-            var wallSize = wallMeshBounds.size;
-            var cornerSize = cornerMeshBounds.size;
-
-            var actualRoomSize = new Vector3();
-            var numberOfWalls = new Vector2Int();
-
-            var numberOfWallsAndRoomSize = CalculateNumberOfWallsAndRoomSize(this.roomSize.x, wallSize.x, cornerSize.x, "x");
-            actualRoomSize.x = numberOfWallsAndRoomSize.roomSize;
-            numberOfWalls.x = numberOfWallsAndRoomSize.numberOfWalls;
-
-            numberOfWallsAndRoomSize = CalculateNumberOfWallsAndRoomSize(this.roomSize.y, wallSize.x, cornerSize.z, "z");
-            actualRoomSize.z = numberOfWallsAndRoomSize.roomSize;
-            numberOfWalls.y = numberOfWallsAndRoomSize.numberOfWalls;
-
-            actualRoomSize.y = wallMeshBounds.size.y;
-
-            return new SpawnInfo(Vector3.zero, actualRoomSize, numberOfWalls);
-        }
-
-        private (int numberOfWalls, float roomSize) CalculateNumberOfWallsAndRoomSize(float unitsToFill, float wallSize, float cornerSize, string dimensionName)
-        {
-            // Guarantees to generate a room as big or smaller than the configured room size (0.01f tolerance to avoid problems due to floating point imprecision)
-            var numberOfWalls = (int) ((unitsToFill + 0.01f - (2f * cornerSize)) / wallSize);
-
-            if (numberOfWalls == 0)
-            {
-                Debug.LogWarning($"{dimensionName.ToUpper()}-Dimension was too small. At least one wall should be spawned. Room will therefore will be bigger than given {dimensionName.ToLower()}-value.");
-                numberOfWalls = 1;
-            }
-
-            return (numberOfWalls, 2f * cornerSize + (numberOfWalls * wallSize));
-        }
 
         private void SpawnFrontOrBackOfRoom(SpawnInfo spawnInfo, ElementSpawner wallSpawner, ElementSpawner cornerSpawner, RoomElement[,] roomElements, Transform parent, bool isBackWall)
         {
@@ -292,7 +281,20 @@ namespace UnityLevelEditor.RoomSpawning
             }
         }
 
+        private class SpawnInfo
+        {
+            public Bounds RoomBounds { get; set; }
+            public Vector2Int NumberOfWalls { get; set; }
 
+            public SpawnInfo(Vector3 center, Vector3 size, Vector2Int numberOfWalls)
+            {
+                RoomBounds = new Bounds(center, size);
+                NumberOfWalls = numberOfWalls;
+            }
+        }
+        #endregion
+        
+        #region Connecting RoomElement References
         private void ConnectFrontAndLeftElement(RoomElement newElement, RoomElement[,] roomElements, Vector2Int indices)
         {
             ConnectLeftElement(newElement, roomElements, indices);
@@ -308,17 +310,8 @@ namespace UnityLevelEditor.RoomSpawning
         {
             newElement.ConnectLeftElement(roomElements[indices.y, indices.x - 1]);
         }
-
-        private class SpawnInfo
-        {
-            public Bounds RoomBounds { get; }
-            public Vector2Int NumberOfWalls { get; }
-
-            public SpawnInfo(Vector3 center, Vector3 roomSize, Vector2Int numberOfWalls)
-            {
-                NumberOfWalls = numberOfWalls;
-                RoomBounds = new Bounds(center, roomSize);
-            }
-        }
+        #endregion
+        #endregion
+        
     }
 }
