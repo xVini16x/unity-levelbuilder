@@ -9,21 +9,21 @@ namespace UnityLevelEditor
     [Serializable]
     public class ElementSpawner
     {
+        [field: SerializeField] public Bounds Bounds { get; private set; }
+
         [field: SerializeField]
-        public Bounds Bounds { get; }
-        
-        [field: SerializeField]
-        private Bounds SidewaysRotatedBounds { get; }
-        
+        private Bounds SidewaysRotatedBounds { get; set; }
+
+        [SerializeField]
         private GameObject toInstantiate;
         
+        [SerializeField]
         private RoomElementTyp type;
 
         public ElementSpawner(GameObject toInstantiate, Bounds bounds, RoomElementTyp type)
         {
             this.toInstantiate = toInstantiate;
             this.type = type;
-
             Bounds = bounds;
             var sizeRotatedSideways = Bounds.size;
             sizeRotatedSideways.x = Bounds.size.z;
