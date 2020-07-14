@@ -9,14 +9,14 @@ namespace UnityLevelEditor.RoomExtension
     [EditorTool("RoomExtension")]
     public class RoomHandles : EditorTool
     {
-        #region Inspector Fields 
+        #region Inspector Fields
 
         [SerializeField] private Texture2D toolIcon;
 
         [SerializeField] private Texture2D toolIconActive;
-        
+
         [SerializeField] private string text = "Room Extension Tool";
-        
+
         [SerializeField] private string tooltip = "Room Extension Tool";
 
         #endregion
@@ -38,7 +38,7 @@ namespace UnityLevelEditor.RoomExtension
             //Debug.Log("Disable");
             EditorTools.activeToolChanged -= ChangeIcon;
         }
-        
+
         private void ChangeIcon()
         {
             //Debug.Log("Changed Tool");
@@ -55,13 +55,13 @@ namespace UnityLevelEditor.RoomExtension
         #endregion
 
         #region Handles
-        
+
         private RoomElement roomElement;
 
         private float capOffset = 3f;
 
         private float capSize = 2f;
-        
+
         public override bool IsAvailable()
         {
             if (!(target is GameObject t))
@@ -70,29 +70,44 @@ namespace UnityLevelEditor.RoomExtension
             }
 
             roomElement = t.GetComponent<RoomElement>();
-            return (roomElement != null);
+            return (roomElement != null && roomElement.Type == RoomElementTyp.Wall);
         }
 
         private Vector3 Snapping(Vector3 pos)
         {
-            pos.x= Mathf.Round(pos.x / 15f)*15f;
-            pos.z= Mathf.Round(pos.z / 15f)*15f;
+            var snapValue = roomElement.ExtendableRoom.FloorSpawner.Bounds.size.x;
+            
+            Debug.Log(snapValue);
+            pos.x = Mathf.Round(pos.x / snapValue) * snapValue;
+            pos.z = Mathf.Round(pos.z / snapValue) * snapValue;
             return pos;
         }
-        
+
         public override void OnToolGUI(EditorWindow window)
         {
+            if (!roomElement || roomElement.Type != RoomElementTyp.Wall)
+            {
+                return;
+            }
+
             EditorGUI.BeginChangeCheck();
 
             Vector3 position = Tools.handlePosition;
 
-            using (new Handles.DrawingScope(Color.red))
+            switch (roomElement.SpawnOrientation)
             {
-                position = Handles.Slider(position, Vector3.right, capSize, Handles.ArrowHandleCap, 1f);
-            }
-            using (new Handles.DrawingScope(Color.blue))
-            {
-                position = Handles.Slider(position, Vector3.forward, capSize, Handles.ArrowHandleCap, 1f);
+                case SpawnOrientation.Back:
+                    position = DrawHandle(position, Vector3.back, Color.blue);
+                    break;
+                case SpawnOrientation.Front:
+                    position = DrawHandle(position, Vector3.forward, Color.blue);
+                    break;
+                case SpawnOrientation.Left:
+                    position = DrawHandle(position, Vector3.left, Color.red);
+                    break;
+                case SpawnOrientation.Right:
+                    position = DrawHandle(position, Vector3.right, Color.red);
+                    break;
             }
 
             if (EditorGUI.EndChangeCheck())
@@ -105,7 +120,15 @@ namespace UnityLevelEditor.RoomExtension
                     transform.position += delta;
             }
         }
-        
+
+        private Vector3 DrawHandle(Vector3 position, Vector3 direction, Color color)
+        {
+            using (new Handles.DrawingScope(color))
+            {
+                return Handles.Slider(position, direction, capSize, Handles.ArrowHandleCap, 1f);
+            }
+        }
+
         #endregion
     }
 }
