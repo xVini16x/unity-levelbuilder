@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
 using UnityLevelEditor.Model;
+using UnityLevelEditor.RoomExtension;
 
 namespace UnityLevelEditor.RoomSpawning
 {
@@ -165,16 +166,23 @@ namespace UnityLevelEditor.RoomSpawning
             RoomElement[,] roomElements = new RoomElement[spawnInfo.NumberOfWalls.y + 2, spawnInfo.NumberOfWalls.x + 2];
 
             GameObject room = new GameObject(roomName);
-            SpawnFrontOrBackOfRoom(spawnInfo, wallSpawner, cornerSpawner, roomElements, room.transform, false);
-            SpawnRoomCenter(spawnInfo, wallSpawner, floorSpawner, roomElements, room.transform);
-            SpawnFrontOrBackOfRoom(spawnInfo, wallSpawner, cornerSpawner, roomElements, room.transform, true);
+            
+            ExtendableRoom eroom = room.AddComponent<ExtendableRoom>();
+            eroom.WallSpawner = wallSpawner;
+            eroom.FloorSpawner = floorSpawner;
+            eroom.CornerSpawner = cornerSpawner;
+            
+            SpawnFrontOrBackOfRoom(spawnInfo, wallSpawner, cornerSpawner, roomElements, eroom, false);
+            SpawnRoomCenter(spawnInfo, wallSpawner, floorSpawner, roomElements, eroom);
+            SpawnFrontOrBackOfRoom(spawnInfo, wallSpawner, cornerSpawner, roomElements, eroom, true);
+            
             
             Undo.RegisterCreatedObjectUndo(room, "Room Creation");
             Debug.Log("Room created");
         }
 
 
-        private void SpawnFrontOrBackOfRoom(SpawnInfo spawnInfo, ElementSpawner wallSpawner, ElementSpawner cornerSpawner, RoomElement[,] roomElements, Transform parent, bool isBackWall)
+        private void SpawnFrontOrBackOfRoom(SpawnInfo spawnInfo, ElementSpawner wallSpawner, ElementSpawner cornerSpawner, RoomElement[,] roomElements, ExtendableRoom parent, bool isBackWall)
         {
             Vector3 currentSpawnPos;
             Vector2Int indices;
@@ -245,7 +253,7 @@ namespace UnityLevelEditor.RoomSpawning
             }
         }
 
-        private void SpawnRoomCenter(SpawnInfo spawnInfo, ElementSpawner wallSpawner, ElementSpawner floorSpawner, RoomElement[,] roomElements, Transform parent)
+        private void SpawnRoomCenter(SpawnInfo spawnInfo, ElementSpawner wallSpawner, ElementSpawner floorSpawner, RoomElement[,] roomElements, ExtendableRoom parent)
         {
             RoomElement newRoomElement;
             Vector3 spawnedElementSize;

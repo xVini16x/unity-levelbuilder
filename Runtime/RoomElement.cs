@@ -1,43 +1,53 @@
 ﻿using UnityEngine;
+using UnityLevelEditor.RoomExtension;
 
 namespace UnityLevelEditor.Model
 {
     public class RoomElement : MonoBehaviour
     {
-        [SerializeField] private RoomElementTyp type;
-        [SerializeField] private RoomElement elementFront;
-        [SerializeField] private RoomElement elementLeft;
-        [SerializeField] private RoomElement elementBack;
-        [SerializeField] private RoomElement elementRight;
+        [field: SerializeField, HideInInspector]
+        public RoomElementTyp Type { get; set; }
 
-        public RoomElementTyp Type
-        {
-            get => type;
-            set => type = value;
-        }
+        [field: SerializeField, HideInInspector]
+        public RoomElement ElementFront { get; private set; }
+
+        [field: SerializeField, HideInInspector]
+        public RoomElement ElementLeft { get; private set; }
+
+        [field: SerializeField, HideInInspector]
+        public RoomElement ElementBack { get; private set; }
+
+        [field: SerializeField, HideInInspector]
+        public RoomElement ElementRight { get; private set; }
+
+        [field: SerializeField, HideInInspector]
+        public ExtendableRoom ExtendableRoom { get; set; }
+
+        [field: SerializeField, HideInInspector]
+        public SpawnOrientation SpawnOrientation { get; set; }
 
         public void ConnectLeftElement(RoomElement left)
         {
-            elementLeft = left;
-            left.elementRight = this;
-        }
-
-        public void ConnectBackElement(RoomElement back)
-        {
-            elementBack = back;
-            back.elementFront = this;
-        }
-
-        public void ConnectRightElement(RoomElement right)
-        {
-            elementRight = right;
-            right.elementLeft = this;
+            ElementLeft = left;
+            left.ElementRight = this;
         }
 
         public void ConnectFrontElement(RoomElement front)
         {
-            elementFront = front;
-            front.elementBack = this;
+            ElementFront = front;
+            front.ElementBack = this;
+        }
+        
+        public void ConnectBackElement(RoomElement back)
+        {
+            ElementBack = back;
+            back.ElementFront = this;
+        }
+
+        public void ConnectRightElement(RoomElement right)
+        {
+            ElementRight = right;
+            right.ElementLeft = this;
         }
     }
 }

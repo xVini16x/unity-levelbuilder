@@ -1,15 +1,23 @@
-﻿using UnityEditor;
+﻿using System;
+using UnityEditor;
 using UnityEngine;
 using UnityLevelEditor.Model;
+using UnityLevelEditor.RoomExtension;
 
 namespace UnityLevelEditor
 {
+    [Serializable]
     public class ElementSpawner
     {
+        [field: SerializeField]
         public Bounds Bounds { get; }
+        
+        [field: SerializeField]
         private Bounds SidewaysRotatedBounds { get; }
-        private readonly GameObject toInstantiate;
-        private readonly RoomElementTyp type;
+        
+        private GameObject toInstantiate;
+        
+        private RoomElementTyp type;
 
         public ElementSpawner(GameObject toInstantiate, Bounds bounds, RoomElementTyp type)
         {
@@ -37,18 +45,19 @@ namespace UnityLevelEditor
             return position;
         }
 
-        public (RoomElement roomElement, Vector3 dimensions) SpawnByLeftBottomCenter(Vector3 position, SpawnOrientation orientation, Transform parent, string name)
+        public (RoomElement roomElement, Vector3 dimensions) SpawnByLeftBottomCenter(Vector3 position, SpawnOrientation orientation, ExtendableRoom parent, string name)
         {
             var applicableBounds = orientation.IsSideways() ? SidewaysRotatedBounds : Bounds;
             position.x += applicableBounds.extents.x;
             position.y += applicableBounds.extents.y;
 
-            return (Spawn(position, orientation.ToAngle(), parent, name), applicableBounds.size);
+            return (Spawn(position, orientation, parent, name), applicableBounds.size);
         }
 
-        private RoomElement Spawn(Vector3 position, float angle, Transform parent, string name)
+        private RoomElement Spawn(Vector3 position, SpawnOrientation orientation, ExtendableRoom parent, string name)
         {
-            var spawnedObject = (GameObject) PrefabUtility.InstantiatePrefab(toInstantiate, parent);
+            var angle = orientation.ToAngle();
+            var spawnedObject = (GameObject) PrefabUtility.InstantiatePrefab(toInstantiate, parent.transform);
             spawnedObject.name = name;
             spawnedObject.transform.position = position;
             var roomElement = spawnedObject.AddComponent<RoomElement>();
@@ -58,6 +67,8 @@ namespace UnityLevelEditor
             }
 
             roomElement.Type = type;
+            roomElement.ExtendableRoom = parent;
+            roomElement.SpawnOrientation = orientation;
             return roomElement;
         }
     }
