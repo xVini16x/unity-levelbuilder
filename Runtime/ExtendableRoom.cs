@@ -1,16 +1,24 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
+using UnityLevelEditor.Model;
 
 namespace UnityLevelEditor.RoomExtension
 {
     public class ExtendableRoom : MonoBehaviour
     {
         [field: SerializeField, HideInInspector]
-        public ElementSpawner WallSpawner { get; set; }
+        public List<ElementSpawner> ElementSpawner { get; private set; }
 
-        [field: SerializeField, HideInInspector]
-        public ElementSpawner CornerSpawner { get; set; }
-
-        [field: SerializeField, HideInInspector]
-        public ElementSpawner FloorSpawner { get; set; }
+        public void SetElementSpawner(Dictionary<RoomElementTyp, ElementSpawner> elementSpawnerByType)
+        {
+            ElementSpawner = new List<ElementSpawner>();
+            var kvpsOrdered = elementSpawnerByType.OrderBy(kvp => (int) kvp.Key);
+            
+            foreach (var keyValuePair in kvpsOrdered)
+            {
+                ElementSpawner.Add(keyValuePair.Value);
+            }
+        }
     }
 }
