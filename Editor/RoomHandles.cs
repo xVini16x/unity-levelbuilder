@@ -58,10 +58,6 @@ namespace UnityLevelEditor.RoomExtension
 
         #region Handles
         
-        private float capOffset = 3f;
-
-        private float capSize = 2f;
-
         public override bool IsAvailable()
         {
             if (!(target is GameObject t))
@@ -85,6 +81,7 @@ namespace UnityLevelEditor.RoomExtension
 
             Vector3 position = Tools.handlePosition;
             var representativeWall = selectedWalls[0];
+
 
             switch (representativeWall.SpawnOrientation)
             {
@@ -114,7 +111,7 @@ namespace UnityLevelEditor.RoomExtension
         {
             using (new Handles.DrawingScope(color))
             {
-                return Handles.Slider(position, direction, capSize, Handles.ArrowHandleCap, 1f);
+                return Handles.Slider(position, direction, HandleUtility.GetHandleSize(position), Handles.ArrowHandleCap, 1f);
             }
         }
         #endregion
