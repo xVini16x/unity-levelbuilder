@@ -135,10 +135,12 @@ namespace UnityLevelEditor.RoomExtension
 
             wallToMove.transform.position += movementDelta;
 
+            /*
             foreach (var transform in Selection.transforms)
             {
                 transform.position += movementDelta;
             }
+            */
         }
 
         #endregion
