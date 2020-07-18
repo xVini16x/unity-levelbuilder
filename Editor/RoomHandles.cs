@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -66,7 +67,7 @@ namespace UnityLevelEditor.RoomExtension
             }
 
             var roomElement = t.GetComponent<RoomElement>();
-            return (roomElement != null && roomElement.Type == RoomElementTyp.FullWall);
+            return (roomElement != null && roomElement.Type == RoomElementTyp.Wall);
         }
 
        
@@ -165,7 +166,7 @@ namespace UnityLevelEditor.RoomExtension
             
             Selection.objects = roomElementsOfActiveType.Select(roomElement => roomElement.gameObject).ToArray<Object>();
 
-            if (selectedRoomElement.Type != RoomElementTyp.FullWall)
+            if (selectedRoomElement.Type != RoomElementTyp.Wall)
             {
                 return false;
             }

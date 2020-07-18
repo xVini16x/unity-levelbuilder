@@ -78,7 +78,7 @@ namespace UnityLevelEditor.RoomSpawning
 
             var numberOfWalls = new Vector2Int();
             // Calculate valid room sizes (in Unity Units) based on wall and corner size for creation of slider
-            var fullWallBounds = boundsByType[RoomElementTyp.FullWall];
+            var fullWallBounds = boundsByType[RoomElementTyp.Wall];
             var wallXLength = fullWallBounds.size.x;
             var minRoomSize = wallXLength + 2 * boundsByType[RoomElementTyp.Corner].size.x;
             var (_, maxRoomSize) = CalculateNumberOfWallsAndRoomSize(RoomSizeLimit, wallXLength, minRoomSize);
@@ -109,9 +109,9 @@ namespace UnityLevelEditor.RoomSpawning
         {
             switch (type)
             {
-                case RoomElementTyp.FullWall:
+                case RoomElementTyp.Wall:
                     return fullWall;
-                case RoomElementTyp.FullWallBackside:
+                case RoomElementTyp.WallTransparent:
                     return fullWallBackside;
                 case RoomElementTyp.WallShortenedLeft:
                     return wallShortenedLeft;
@@ -123,7 +123,7 @@ namespace UnityLevelEditor.RoomSpawning
                     return floor;
                 case RoomElementTyp.Corner:
                     return corner;
-                case RoomElementTyp.CornerBackside:
+                case RoomElementTyp.CornerTransparent:
                     return cornerBackside;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(type), type, $"GetPrefabByType is not supported for type {type} as of current.");
@@ -161,7 +161,7 @@ namespace UnityLevelEditor.RoomSpawning
 
         private bool CheckBoundSizesCorrect(Dictionary<RoomElementTyp, Bounds> boundsByType, out string message)
         {
-            var sameXZTypes = new[] {RoomElementTyp.Corner, RoomElementTyp.CornerBackside, RoomElementTyp.Floor};
+            var sameXZTypes = new[] {RoomElementTyp.Corner, RoomElementTyp.CornerTransparent, RoomElementTyp.Floor};
 
             foreach(var type in sameXZTypes)
             {
@@ -171,7 +171,7 @@ namespace UnityLevelEditor.RoomSpawning
                 }
             }
 
-            var wallTypes = new[] { RoomElementTyp.CornerBackside, RoomElementTyp.FullWall, RoomElementTyp.FullWallBackside, RoomElementTyp.WallShortenedLeft, RoomElementTyp.WallShortenedRight, RoomElementTyp.WallShortenedBothEnds};
+            var wallTypes = new[] { RoomElementTyp.CornerTransparent, RoomElementTyp.Wall, RoomElementTyp.WallTransparent, RoomElementTyp.WallShortenedLeft, RoomElementTyp.WallShortenedRight, RoomElementTyp.WallShortenedBothEnds};
 
             var cornerZ = boundsByType[RoomElementTyp.Corner].size.z;
             var tempMessage = $"The following elements need to have the same z-value: {RoomElementTyp.Corner} ({cornerZ:F}) ";
@@ -191,7 +191,7 @@ namespace UnityLevelEditor.RoomSpawning
                 return false;
             }
 
-            var wallX = boundsByType[RoomElementTyp.FullWall].size.x;
+            var wallX = boundsByType[RoomElementTyp.Wall].size.x;
             var floorX = boundsByType[RoomElementTyp.Floor].size.x;
             
             if (Mathf.Abs(wallX - floorX) > 0.01f)
@@ -261,11 +261,11 @@ namespace UnityLevelEditor.RoomSpawning
             var eroom = room.AddComponent<ExtendableRoom>();
             eroom.SetElementSpawner(elementSpawnerByType);
 
-            var wallSpawner = elementSpawnerByType[RoomElementTyp.FullWall];
+            var wallSpawner = elementSpawnerByType[RoomElementTyp.Wall];
             var cornerSpawner = elementSpawnerByType[RoomElementTyp.Corner];
             var floorSpawner = elementSpawnerByType[RoomElementTyp.Floor];
-            var backWallSpawner = elementSpawnerByType[RoomElementTyp.FullWallBackside];
-            var backCornerSpawner = elementSpawnerByType[RoomElementTyp.CornerBackside];
+            var backWallSpawner = elementSpawnerByType[RoomElementTyp.WallTransparent];
+            var backCornerSpawner = elementSpawnerByType[RoomElementTyp.CornerTransparent];
 
             SpawnFrontOrBackOfRoom(spawnInfo, wallSpawner, cornerSpawner, roomElements, eroom, false);
             SpawnRoomCenter(spawnInfo, wallSpawner, floorSpawner, roomElements, eroom);
