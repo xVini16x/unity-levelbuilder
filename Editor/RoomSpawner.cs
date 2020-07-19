@@ -302,8 +302,8 @@ namespace UnityLevelEditor.RoomSpawning
             {
                 indices = new Vector2Int(0, roomElements.GetLength(0) - 1);
                 wallOrientation = SpawnOrientation.Back;
-                firstCornerOrientation = SpawnOrientation.Left;
-                secondCornerOrientation = wallOrientation;
+                firstCornerOrientation = SpawnOrientation.Front;
+                secondCornerOrientation = SpawnOrientation.Left;
                 currentSpawnPos = spawnInfo.RoomBounds.min;
                 currentSpawnPos = cornerSpawner.ConvertLeftBottomBackPositionToLeftBottomCenterPosition(currentSpawnPos, wallOrientation);
             }
@@ -311,8 +311,8 @@ namespace UnityLevelEditor.RoomSpawning
             {
                 indices = new Vector2Int(0, 0);
                 wallOrientation = SpawnOrientation.Front;
-                firstCornerOrientation = wallOrientation;
-                secondCornerOrientation = SpawnOrientation.Right;
+                firstCornerOrientation = SpawnOrientation.Right;
+                secondCornerOrientation = SpawnOrientation.Back;
                 currentSpawnPos = spawnInfo.RoomBounds.min;
                 currentSpawnPos.z = spawnInfo.RoomBounds.max.z;
                 currentSpawnPos = cornerSpawner.ConvertLeftBottomFrontPositionToLeftBottomCenterPosition(currentSpawnPos, wallOrientation);
