@@ -122,6 +122,83 @@ namespace UnityLevelEditor.RoomExtension
         #endregion
         
         #region RoomExtending 
+         private SpawnOrientation GetCornerOrientationBasedOnWall(RoomElement wall, Direction direction)
+        {
+            if (!wall.Type.IsWallType())
+            {
+                throw new Exception("Fail");
+            }
+
+            if (wall.Type == RoomElementTyp.WallShortenedRight)
+            {
+                return wall.SpawnOrientation.Shift(-1); //1-6 wand -90 drehung der corner
+            }
+
+            if (wall.Type == RoomElementTyp.WallShortenedLeft)
+            {
+                return wall.SpawnOrientation;
+            }
+
+            switch (wall.SpawnOrientation)
+            {
+                case SpawnOrientation.Front:
+                    if (direction == Direction.Left)
+                    {
+                        return SpawnOrientation.Right; //+180
+                    }
+
+                    if (direction == Direction.Right)
+                    {
+                        return SpawnOrientation.Back; // +90
+                    }
+
+                    break;
+                case SpawnOrientation.Right:
+                    if (direction == Direction.Front)
+                    {
+                        return SpawnOrientation.Back; //+90
+                    }
+
+                    if (direction == Direction.Back)
+                    {
+                        return SpawnOrientation.Left; //+180
+                    }
+
+                    break;
+                case SpawnOrientation.Back:
+                    if (direction == Direction.Right)
+                    {
+                        return SpawnOrientation.Left;
+                    }
+
+                    if (direction == Direction.Left)
+                    {
+                        return SpawnOrientation.Front;
+                    }
+
+                    break;
+                case SpawnOrientation.Left:
+                    if (direction == Direction.Back)
+                    {
+                        return SpawnOrientation.Front;
+                    }
+
+                    if (direction == Direction.Front)
+                    {
+                        return SpawnOrientation.Right;
+                    }
+
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            //TODO Other cases not supported
+            Debug.LogError(
+                $"Not supported wall orientation {wall.SpawnOrientation} and corner in direction {direction}");
+            return wall.SpawnOrientation.Shift(1);
+        }
+         
         private Vector3 SnapVectorXZ(Vector3 vector, float snapValue)
         {
             vector.x = Mathf.Round(vector.x / snapValue) * snapValue;
@@ -148,7 +225,7 @@ namespace UnityLevelEditor.RoomExtension
             var wallDirection = wallToMove.SpawnOrientation.ToDirection();
             var floorSpawnDirection = wallDirection.Opposite();
             
-            var newFloor = spawnerList[(int) RoomElementTyp.Floor].SpawnNextToRoomElement(wallToMove, floorSpawnDirection);
+            var newFloor = spawnerList[(int) RoomElementTyp.Floor].SpawnNextToRoomElement(wallToMove, floorSpawnDirection, SpawnOrientation.Front);
             Undo.RegisterCreatedObjectUndo(newFloor.gameObject, "");
 
             var oldFloor = wallToMove.GetRoomElementByDirection(floorSpawnDirection);
@@ -214,7 +291,7 @@ namespace UnityLevelEditor.RoomExtension
             //var spawnerType = spawnOrientation == SpawnOrientation.Back ? RoomElementTyp.WallTransparent : RoomElementTyp.Wall;
             var spawnDirection = spawnOrientation.ToDirection().Shift(factor);
             var spawner = spawnerList[(int) spawnerType];
-            var newWall =  spawner.SpawnNextToRoomElement(corner, spawnDirection);
+            var newWall =  spawner.SpawnNextToRoomElement(corner, spawnDirection, spawnOrientation);
             var oldElementInSpawnDirection = corner.GetRoomElementByDirection(spawnDirection);
             if (oldElementInSpawnDirection != null)
             {
@@ -231,7 +308,7 @@ namespace UnityLevelEditor.RoomExtension
         {
             var spawnerList = wallToMove.ExtendableRoom.ElementSpawner;
             var cornerSpawner = spawnerList[(int) RoomElementTyp.Corner];
-            var newCorner = cornerSpawner.SpawnNextToRoomElement(wallToMove, direction);
+            var newCorner = cornerSpawner.SpawnNextToRoomElement(wallToMove, direction, GetCornerOrientationBasedOnWall(wallToMove, direction));
             newCorner.gameObject.name = name;
             Undo.RegisterCreatedObjectUndo(newCorner.gameObject, "");
             Undo.RecordObject(wallToMove, "");
@@ -239,13 +316,21 @@ namespace UnityLevelEditor.RoomExtension
             RoomElement shorterWall = null;
             if (oldWall != null)
             {
-                var wallType = factor == 1
-                    ? RoomElementTyp.WallShortenedLeft
-                    : RoomElementTyp.WallShortenedRight;
+                RoomElementTyp wallType;
+                if (oldWall.Type == RoomElementTyp.Wall || oldWall.Type == RoomElementTyp.WallTransparent)
+                {
+                     wallType = factor == 1
+                                        ? RoomElementTyp.WallShortenedLeft
+                                        : RoomElementTyp.WallShortenedRight;
+                }
+                else
+                {
+                    wallType = RoomElementTyp.WallShortenedBothEnds;
+                }
 
                 RoomElement oldWallNeighbourInDirection = oldWall.GetRoomElementByDirection(direction);
                 var wallSpawner = spawnerList[(int) wallType];
-                shorterWall = wallSpawner.SpawnNextToRoomElement(oldWallNeighbourInDirection, direction.Opposite());
+                shorterWall = wallSpawner.SpawnNextToRoomElement(oldWallNeighbourInDirection, direction.Opposite(), wallToMove.SpawnOrientation);
                 Undo.RegisterCreatedObjectUndo(shorterWall.gameObject, "");
                 shorterWall.CopyNeighbors(oldWall);
                 wallToMove.ConnectElementByDirection(null, direction);
