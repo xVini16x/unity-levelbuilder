@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using UnityLevelEditor.RoomExtension;
 
@@ -25,11 +26,19 @@ namespace UnityLevelEditor.Model
         [field: SerializeField, HideInInspector]
         public ExtendableRoom ExtendableRoom { get; set; }
 
+        /**
+         * Represents rotation dependent on our fix camera view
+         */
         [field: SerializeField, HideInInspector]
         public SpawnOrientation SpawnOrientation { get; set; }
 
         public void ConnectLeftElement(RoomElement left)
         {
+            if (ElementLeft != null && ElementLeft.ElementRight != null && ElementLeft.ElementRight.Equals(this))
+            {
+                ElementLeft.ElementRight = null;
+            }
+            
             ElementLeft = left;
             if (left != null)
             {
@@ -39,6 +48,11 @@ namespace UnityLevelEditor.Model
 
         public void ConnectFrontElement(RoomElement front)
         {
+            if (ElementFront != null && ElementFront.ElementBack != null && ElementFront.ElementBack.Equals(this))
+            {
+                ElementFront.ElementBack = null;
+            }
+            
             ElementFront = front;
             if (front != null)
             {
@@ -48,6 +62,11 @@ namespace UnityLevelEditor.Model
         
         public void ConnectBackElement(RoomElement back)
         {
+            if (ElementBack != null && ElementBack.ElementFront != null && ElementBack.ElementFront.Equals(this))
+            {
+                ElementBack.ElementFront = null;
+            }
+            
             ElementBack = back;
             if (back != null)
             {
@@ -57,6 +76,11 @@ namespace UnityLevelEditor.Model
 
         public void ConnectRightElement(RoomElement right)
         {
+            if (ElementRight != null && ElementRight.ElementLeft != null && ElementRight.ElementLeft.Equals(this))
+            {
+                ElementRight.ElementLeft = null;
+            }
+            
             ElementRight = right;
             if (right != null)
             {
@@ -104,9 +128,41 @@ namespace UnityLevelEditor.Model
 
         public void CopyNeighbors(RoomElement toCopy)
         {
+            Undo.RecordObject(toCopy, "");
+            
             foreach (var direction in Enum.GetValues(typeof(Direction)).Cast<Direction>())
             {
                 ConnectElementByDirection(toCopy.GetRoomElementByDirection(direction), direction);
+                toCopy.ConnectElementByDirection(null, direction);
+            }
+        }
+
+        public RoomElement GetClockwiseNeighbor(SpawnOrientation spawnOrientation)
+        {
+            return this.GetRoomElementByDirection(spawnOrientation.ToDirection().Shift(1));
+        }
+        
+        public RoomElement GetCounterClockwiseNeighbor(SpawnOrientation spawnOrientation)
+        {
+            return this.GetRoomElementByDirection(spawnOrientation.ToDirection().Shift(-1));
+        }
+
+        public void DisconnectFromAllNeighbors()
+        {
+            Undo.RecordObject(this, "");
+            foreach (var direction in Enum.GetValues(typeof(Direction)).Cast<Direction>())
+            {
+                var neighbor = GetRoomElementByDirection(direction);
+                if (neighbor != null)
+                {
+                   Undo.RecordObject(neighbor, "");
+                   if (neighbor.GetRoomElementByDirection(direction.Opposite()).Equals(this))
+                   {
+                       neighbor.ConnectElementByDirection(null, direction.Opposite());
+                   }
+            
+                   ConnectElementByDirection(null, direction);
+                }
             }
         }
     }

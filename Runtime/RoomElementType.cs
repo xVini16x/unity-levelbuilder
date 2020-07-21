@@ -26,5 +26,10 @@ namespace UnityLevelEditor.Model
         {
             return type == RoomElementTyp.Corner || type == RoomElementTyp.CornerTransparent;
         }
+
+        public static bool IsShortenedWall(this RoomElementTyp type)
+        {
+            return type == RoomElementTyp.WallShortenedLeft || type == RoomElementTyp.WallShortenedRight;
+        }
     }
 }
