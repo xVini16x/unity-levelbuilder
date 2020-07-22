@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace UnityLevelEditor.Model
+﻿namespace UnityLevelEditor.Model
 {
     public enum RoomElementTyp
     {

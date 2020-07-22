@@ -137,16 +137,6 @@ namespace UnityLevelEditor.Model
             }
         }
 
-        public RoomElement GetClockwiseNeighbor(SpawnOrientation spawnOrientation)
-        {
-            return this.GetRoomElementByDirection(spawnOrientation.ToDirection().Shift(1));
-        }
-        
-        public RoomElement GetCounterClockwiseNeighbor(SpawnOrientation spawnOrientation)
-        {
-            return this.GetRoomElementByDirection(spawnOrientation.ToDirection().Shift(-1));
-        }
-
         public void DisconnectFromAllNeighbors()
         {
             Undo.RecordObject(this, "");

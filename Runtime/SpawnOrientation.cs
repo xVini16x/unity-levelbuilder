@@ -47,12 +47,7 @@ namespace UnityLevelEditor.Model
             }
         }
 
-        public static int GetDifference(this SpawnOrientation spawnOrientation, SpawnOrientation otherOrientation)
-        {
-            return ((int)spawnOrientation) - ((int) otherOrientation);
-        }
-
-        public static SpawnOrientation Shift(this SpawnOrientation spawnOrientation, int shiftBy = 1)
+        public static SpawnOrientation Shift(this SpawnOrientation spawnOrientation, int shiftBy)
         {
             int index = (int) spawnOrientation;
 
