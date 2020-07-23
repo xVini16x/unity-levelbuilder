@@ -400,9 +400,12 @@ namespace UnityLevelEditor.RoomExtension
             
             // Get The old floor which was connected to the wall
             var oldFloor = wallToMove.GetRoomElementByDirection(wallDirection.Opposite());
+            var newGridPosition = GetGridPosition(oldFloor, wallDirection);
             Undo.RecordObject(oldFloor, "");
             // Old floor is used to spawn the new floor because otherwise there could be offset problems if the wall would be a shortened one
             var newFloor = floorSpawner.SpawnNextToRoomElement(oldFloor, wallDirection, SpawnOrientation.Front);
+            ((FloorElement) newFloor).GridPosition = newGridPosition; 
+            wallToMove.ExtendableRoom.FloorGridDictionary.Add(newGridPosition, newFloor as FloorElement);
             Undo.RegisterCreatedObjectUndo(newFloor.gameObject, "");
             //Connect elements
             oldFloor.ConnectElementByDirection(newFloor, wallDirection);
@@ -410,7 +413,7 @@ namespace UnityLevelEditor.RoomExtension
     
             return newFloor;
         }
-
+        
         private RoomElement ReplaceShortenedWallThroughFullWall(RoomElement wallToMove)
         {
             var spawnerList = wallToMove.ExtendableRoom.ElementSpawner;
@@ -545,6 +548,32 @@ namespace UnityLevelEditor.RoomExtension
         }
 
         #region utilitys
+        
+        private static Vector2Int GetGridPosition(RoomElement oldFloor, Direction spawnDirection)
+        {
+            var oldFloorElement = oldFloor as FloorElement;
+            
+            if (oldFloorElement == null)
+            {
+                throw new Exception("GetGridPosition expects floorElement as parameter!");
+            }
+            
+            Vector2Int oldFloorGridPosition = oldFloorElement.GridPosition;
+
+            switch (spawnDirection)
+            {
+                case Direction.Front:
+                    return oldFloorGridPosition + Vector2Int.up;
+                case Direction.Right:
+                    return oldFloorGridPosition + Vector2Int.right;
+                case Direction.Back:
+                    return oldFloorGridPosition + Vector2Int.down;
+                case Direction.Left:
+                    return oldFloorGridPosition + Vector2Int.left;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(spawnDirection), spawnDirection, "invalid spawnDirection");
+            }
+        }
 
         private Vector3 GetWallPositionBasedOnShorterWall(RoomElement wallToMove)
         {

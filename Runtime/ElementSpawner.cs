@@ -100,7 +100,15 @@ namespace UnityLevelEditor
             var spawnedObject = (GameObject) PrefabUtility.InstantiatePrefab(toInstantiate, parent.transform);
             spawnedObject.name = name;
             spawnedObject.transform.position = position;
-            var roomElement = spawnedObject.AddComponent<RoomElement>();
+            RoomElement roomElement;
+            if (type == RoomElementTyp.Floor)
+            {
+                roomElement = spawnedObject.AddComponent<FloorElement>();
+            }
+            else
+            {
+                roomElement = spawnedObject.AddComponent<RoomElement>();
+            }
             if (Mathf.Abs(angle) > 0.01f)
             {
                 spawnedObject.transform.Rotate(Vector3.up, angle);

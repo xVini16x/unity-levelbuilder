@@ -10,6 +10,9 @@ namespace UnityLevelEditor.RoomExtension
         [field: SerializeField, HideInInspector]
         public List<ElementSpawner> ElementSpawner { get; private set; }
 
+        [field: SerializeField, HideInInspector]
+        public FloorGridDictionary FloorGridDictionary { get; set; }
+
         public void SetElementSpawner(Dictionary<RoomElementTyp, ElementSpawner> elementSpawnerByType)
         {
             ElementSpawner = new List<ElementSpawner>();
