@@ -272,6 +272,8 @@ namespace UnityLevelEditor.RoomSpawning
             SpawnRoomCenter(spawnInfo, wallSpawner, floorSpawner, roomElements, eroom, floorGridDictionary);
             SpawnFrontOrBackOfRoom(spawnInfo, backWallSpawner, backCornerSpawner, roomElements, eroom, true);
 
+            eroom.FloorGridDictionary = floorGridDictionary;
+            
             Undo.RegisterCreatedObjectUndo(room, "Room Creation");
             Debug.Log("Room created");
         }
