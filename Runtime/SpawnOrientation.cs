@@ -72,6 +72,23 @@ namespace UnityLevelEditor.Model
         {
             return spawnOrientation == SpawnOrientation.Left || spawnOrientation == SpawnOrientation.Back;
         }
+        
+        public static SpawnOrientation Opposite(this SpawnOrientation spawnOrientation)
+        {
+            switch (spawnOrientation)
+            {
+                case SpawnOrientation.Back:
+                    return SpawnOrientation.Front;
+                case SpawnOrientation.Front:
+                    return SpawnOrientation.Back;
+                case SpawnOrientation.Left:
+                    return SpawnOrientation.Right;
+                case SpawnOrientation.Right:
+                    return SpawnOrientation.Left;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(SpawnOrientation), spawnOrientation, $"SpawnOrientation {spawnOrientation} not supported.");
+            }
+        }
     }
    
 }
