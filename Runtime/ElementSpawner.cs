@@ -117,6 +117,7 @@ namespace UnityLevelEditor
             roomElement.Type = type;
             roomElement.ExtendableRoom = parent;
             roomElement.SpawnOrientation = orientation;
+            Undo.RegisterCreatedObjectUndo(roomElement.gameObject, "");
             return roomElement;
         }
     }
