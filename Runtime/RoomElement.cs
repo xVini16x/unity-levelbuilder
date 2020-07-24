@@ -132,7 +132,10 @@ namespace UnityLevelEditor.Model
             
             foreach (var direction in Enum.GetValues(typeof(Direction)).Cast<Direction>())
             {
-                ConnectElementByDirection(toCopy.GetRoomElementByDirection(direction), direction);
+                var element = toCopy.GetRoomElementByDirection(direction);
+                if(element == null){continue;}
+                Undo.RecordObject(element, "");
+                ConnectElementByDirection(element, direction);
                 toCopy.ConnectElementByDirection(null, direction);
             }
         }
