@@ -10,6 +10,64 @@ namespace UnityLevelEditor.RoomExtension
     public static class RoomExtension
     {
         #region RoomExtending
+        
+        /**
+         *  Dont forget to connect corner with other wall
+         */
+        private static (RoomElement, RoomElement) ShrinkWall(RoomElement wallToShrink, bool spawnWithCorner, bool clockwise)
+        {
+            if (!wallToShrink.Type.IsWallType())
+            {
+                throw new NotSupportedException("Can only shrink walls!");
+            }
+
+            RoomElement wall;
+            List<ElementSpawner> spawnerList = wallToShrink.ExtendableRoom.ElementSpawner;
+            ElementSpawner spawner;
+
+            switch (wallToShrink.Type)
+            {
+                case RoomElementTyp.Wall:
+                    goto case RoomElementTyp.WallTransparent;
+                case RoomElementTyp.WallTransparent:
+                    spawner = clockwise
+                        ? spawnerList[(int) RoomElementTyp.WallShortenedLeft]
+                        : spawnerList[(int) RoomElementTyp.WallShortenedRight];
+                    break;
+                case RoomElementTyp.WallShortenedLeft:
+                    goto case RoomElementTyp.WallShortenedRight;
+                case RoomElementTyp.WallShortenedRight:
+                    spawner = spawnerList[(int) RoomElementTyp.WallShortenedBothEnds];
+                    break;
+                case RoomElementTyp.WallShortenedBothEnds:
+                    throw new NotSupportedException("Can not shrink more!");
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            var direction = wallToShrink.SpawnOrientation.ToDirection().Shift(clockwise ? 1 : -1);
+            var neighbor = wallToShrink.GetRoomElementByDirection(direction);
+            wall = spawner.SpawnNextToRoomElement(neighbor, direction.Opposite(), wallToShrink.SpawnOrientation);
+
+            //connection handling
+            wall.CopyNeighbors(wallToShrink);
+            
+            RoomElement corner = null;
+            if (spawnWithCorner)
+            {
+                var cornerSpawner = spawnerList[(int) RoomElementTyp.Corner];
+                corner = cornerSpawner.SpawnNextToRoomElement(wall, direction.Opposite(),
+                    GetCornerOrientationBasedOnWall(wall, direction.Opposite()));
+                wallToShrink.ConnectElementByDirection(corner, direction.Opposite());
+            }
+            
+            //delete old wall
+            wallToShrink.DisconnectFromAllNeighbors();
+            Undo.DestroyObjectImmediate(wallToShrink.gameObject);
+            
+            return (wall, corner);
+        }
 
         private static SpawnOrientation GetCornerOrientationBasedOnWall(RoomElement wall, Direction direction)
         {
