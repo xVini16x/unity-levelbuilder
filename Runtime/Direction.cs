@@ -13,7 +13,7 @@ public static class DirectionExtensions
 {
     private static readonly int DirectionEnumLength = Enum.GetValues(typeof(Direction)).Length;
 
-    public static Direction Shift(this Direction direction, int shiftBy = 1)
+    public static Direction Shift(this Direction direction, int shiftBy)
     {
         int index = (int) direction;
 
