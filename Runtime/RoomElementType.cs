@@ -1,6 +1,6 @@
 ﻿namespace UnityLevelEditor.Model
 {
-    public enum RoomElementTyp
+    public enum RoomElementType
     {
         Wall = 0,
         WallTransparent = 1,
@@ -14,20 +14,20 @@
 
     public static class RoomElementTypeExtensions
     {
-        public static bool IsWallType(this RoomElementTyp type)
+        public static bool IsWallType(this RoomElementType type)
         {
-            return type == RoomElementTyp.Wall || type == RoomElementTyp.WallTransparent || type == RoomElementTyp.WallShortenedLeft || type == RoomElementTyp.WallShortenedRight
-                   || type == RoomElementTyp.WallShortenedBothEnds;
+            return type == RoomElementType.Wall || type == RoomElementType.WallTransparent || type == RoomElementType.WallShortenedLeft || type == RoomElementType.WallShortenedRight
+                   || type == RoomElementType.WallShortenedBothEnds;
         }
 
-        public static bool IsCornerType(this RoomElementTyp type)
+        public static bool IsCornerType(this RoomElementType type)
         {
-            return type == RoomElementTyp.Corner || type == RoomElementTyp.CornerTransparent;
+            return type == RoomElementType.Corner || type == RoomElementType.CornerTransparent;
         }
 
-        public static bool IsShortenedWall(this RoomElementTyp type)
+        public static bool IsShortenedWall(this RoomElementType type)
         {
-            return type == RoomElementTyp.WallShortenedLeft || type == RoomElementTyp.WallShortenedRight;
+            return type == RoomElementType.WallShortenedLeft || type == RoomElementType.WallShortenedRight;
         }
     }
 }

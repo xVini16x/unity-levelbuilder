@@ -103,7 +103,7 @@ namespace UnityLevelEditor.RoomExtension
 
             if (EditorGUI.EndChangeCheck())
             {
-                var snapValue = representativeWall.ExtendableRoom.ElementSpawner[(int) RoomElementTyp.Floor].Bounds.size
+                var snapValue = representativeWall.ExtendableRoom.ElementSpawner[(int) RoomElementType.Floor].Bounds.size
                     .x;
                 var movementDelta = SnapVectorXZ(position - Tools.handlePosition, snapValue);
                 if (Mathf.Abs(movementDelta.x) < 0.01f && Mathf.Abs(movementDelta.z) < 0.01f)
@@ -194,7 +194,7 @@ namespace UnityLevelEditor.RoomExtension
                 .ToArray<Object>();
         }
 
-        private List<RoomElement> FilterSelectionForRoomElementsOfGivenTypeAndOrientation(RoomElementTyp type,
+        private List<RoomElement> FilterSelectionForRoomElementsOfGivenTypeAndOrientation(RoomElementType type,
             SpawnOrientation orientation)
         {
             return Selection.transforms.Select(t => t.GetComponent<RoomElement>())

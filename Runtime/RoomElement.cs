@@ -9,7 +9,7 @@ namespace UnityLevelEditor.Model
     public class RoomElement : MonoBehaviour
     {
         [field: SerializeField, HideInInspector]
-        public RoomElementTyp Type { get; set; }
+        public RoomElementType Type { get; set; }
 
         [field: SerializeField]
         public RoomElement ElementFront { get; private set; }
@@ -149,7 +149,8 @@ namespace UnityLevelEditor.Model
                 if (neighbor != null)
                 {
                    Undo.RecordObject(neighbor, "");
-                   if (neighbor.GetRoomElementByDirection(direction.Opposite()).Equals(this))
+                   var neighborCounterDirectionElement = neighbor.GetRoomElementByDirection(direction.Opposite());
+                   if (neighborCounterDirectionElement != null && neighborCounterDirectionElement.Equals(this))
                    {
                        neighbor.ConnectElementByDirection(null, direction.Opposite());
                    }

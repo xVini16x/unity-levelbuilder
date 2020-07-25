@@ -57,7 +57,7 @@ namespace UnityLevelEditor.RoomSpawning
                 return;
             }
 
-            Dictionary<RoomElementTyp, Bounds> boundsByType;
+            Dictionary<RoomElementType, Bounds> boundsByType;
             
             try
             {
@@ -77,9 +77,9 @@ namespace UnityLevelEditor.RoomSpawning
 
             var numberOfWalls = new Vector2Int();
             // Calculate valid room sizes (in Unity Units) based on wall and corner size for creation of slider
-            var fullWallBounds = boundsByType[RoomElementTyp.Wall];
+            var fullWallBounds = boundsByType[RoomElementType.Wall];
             var wallXLength = fullWallBounds.size.x;
-            var minRoomSize = wallXLength + 2 * boundsByType[RoomElementTyp.Corner].size.x;
+            var minRoomSize = wallXLength + 2 * boundsByType[RoomElementType.Corner].size.x;
             var (_, maxRoomSize) = CalculateNumberOfWallsAndRoomSize(RoomSizeLimit, wallXLength, minRoomSize);
 
             EditorGUILayout.BeginHorizontal();
@@ -104,36 +104,36 @@ namespace UnityLevelEditor.RoomSpawning
 
         #region Validation
 
-        private GameObject GetPrefabByType(RoomElementTyp type)
+        private GameObject GetPrefabByType(RoomElementType type)
         {
             switch (type)
             {
-                case RoomElementTyp.Wall:
+                case RoomElementType.Wall:
                     return fullWall;
-                case RoomElementTyp.WallTransparent:
+                case RoomElementType.WallTransparent:
                     return fullWallBackside;
-                case RoomElementTyp.WallShortenedLeft:
+                case RoomElementType.WallShortenedLeft:
                     return wallShortenedLeft;
-                case RoomElementTyp.WallShortenedRight:
+                case RoomElementType.WallShortenedRight:
                     return wallShortenedRight;
-                case RoomElementTyp.WallShortenedBothEnds:
+                case RoomElementType.WallShortenedBothEnds:
                     return wallShortenedBothSides;
-                case RoomElementTyp.Floor:
+                case RoomElementType.Floor:
                     return floor;
-                case RoomElementTyp.Corner:
+                case RoomElementType.Corner:
                     return corner;
-                case RoomElementTyp.CornerTransparent:
+                case RoomElementType.CornerTransparent:
                     return cornerBackside;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(type), type, $"GetPrefabByType is not supported for type {type} as of current.");
             }
         }
 
-        private Dictionary<RoomElementTyp, Bounds> GetAllBoundsByType()
+        private Dictionary<RoomElementType, Bounds> GetAllBoundsByType()
         {
-            var dict = new Dictionary<RoomElementTyp, Bounds>();
+            var dict = new Dictionary<RoomElementType, Bounds>();
             
-            foreach (var type in Enum.GetValues(typeof(RoomElementTyp)).Cast<RoomElementTyp>())
+            foreach (var type in Enum.GetValues(typeof(RoomElementType)).Cast<RoomElementType>())
             {
                 dict[type] = GetBoundsOfPrefab(GetPrefabByType(type), type);
             }
@@ -146,7 +146,7 @@ namespace UnityLevelEditor.RoomSpawning
             return fullWall && fullWallBackside && wallShortenedLeft && wallShortenedRight && wallShortenedBothSides && floor && corner && cornerBackside;
         }
         
-        private Bounds GetBoundsOfPrefab(GameObject prefab, RoomElementTyp type)
+        private Bounds GetBoundsOfPrefab(GameObject prefab, RoomElementType type)
         {
             MeshRenderer meshRenderer = prefab.GetComponentInChildren<MeshRenderer>();
             
@@ -158,9 +158,9 @@ namespace UnityLevelEditor.RoomSpawning
             return meshRenderer.bounds;
         }
 
-        private bool CheckBoundSizesCorrect(Dictionary<RoomElementTyp, Bounds> boundsByType, out string message)
+        private bool CheckBoundSizesCorrect(Dictionary<RoomElementType, Bounds> boundsByType, out string message)
         {
-            var sameXZTypes = new[] {RoomElementTyp.Corner, RoomElementTyp.CornerTransparent, RoomElementTyp.Floor};
+            var sameXZTypes = new[] {RoomElementType.Corner, RoomElementType.CornerTransparent, RoomElementType.Floor};
 
             foreach(var type in sameXZTypes)
             {
@@ -170,10 +170,10 @@ namespace UnityLevelEditor.RoomSpawning
                 }
             }
 
-            var wallTypes = new[] { RoomElementTyp.CornerTransparent, RoomElementTyp.Wall, RoomElementTyp.WallTransparent, RoomElementTyp.WallShortenedLeft, RoomElementTyp.WallShortenedRight, RoomElementTyp.WallShortenedBothEnds};
+            var wallTypes = new[] { RoomElementType.CornerTransparent, RoomElementType.Wall, RoomElementType.WallTransparent, RoomElementType.WallShortenedLeft, RoomElementType.WallShortenedRight, RoomElementType.WallShortenedBothEnds};
 
-            var cornerZ = boundsByType[RoomElementTyp.Corner].size.z;
-            var tempMessage = $"The following elements need to have the same z-value: {RoomElementTyp.Corner} ({cornerZ:F}) ";
+            var cornerZ = boundsByType[RoomElementType.Corner].size.z;
+            var tempMessage = $"The following elements need to have the same z-value: {RoomElementType.Corner} ({cornerZ:F}) ";
 
             bool failed = false;
             
@@ -190,8 +190,8 @@ namespace UnityLevelEditor.RoomSpawning
                 return false;
             }
 
-            var wallX = boundsByType[RoomElementTyp.Wall].size.x;
-            var floorX = boundsByType[RoomElementTyp.Floor].size.x;
+            var wallX = boundsByType[RoomElementType.Wall].size.x;
+            var floorX = boundsByType[RoomElementType.Floor].size.x;
             
             if (Mathf.Abs(wallX - floorX) > 0.01f)
             {
@@ -199,8 +199,8 @@ namespace UnityLevelEditor.RoomSpawning
                 return false;
             }
 
-            var wallShortenedLeftX = boundsByType[RoomElementTyp.WallShortenedLeft].size.x;
-            var wallShortenedRightX = boundsByType[RoomElementTyp.WallShortenedRight].size.x;
+            var wallShortenedLeftX = boundsByType[RoomElementType.WallShortenedLeft].size.x;
+            var wallShortenedRightX = boundsByType[RoomElementType.WallShortenedRight].size.x;
             var expectedWallLength = wallX - cornerZ;
             
             if (Mathf.Abs(wallShortenedLeftX - expectedWallLength) > 0.01f ||
@@ -211,7 +211,7 @@ namespace UnityLevelEditor.RoomSpawning
                 return false;
             }
 
-            var wallShortenedBothSidesX = boundsByType[RoomElementTyp.WallShortenedBothEnds].size.x;
+            var wallShortenedBothSidesX = boundsByType[RoomElementType.WallShortenedBothEnds].size.x;
             expectedWallLength = wallX - (2 * cornerZ);
 
             if (Mathf.Abs(wallShortenedBothSidesX - expectedWallLength) > 0.01f)
@@ -249,7 +249,7 @@ namespace UnityLevelEditor.RoomSpawning
         
         #region Room Creation
         #region Element Spawning
-        private void SpawnNewRoom(SpawnInfo spawnInfo, Dictionary<RoomElementTyp, Bounds> boundsByType)
+        private void SpawnNewRoom(SpawnInfo spawnInfo, Dictionary<RoomElementType, Bounds> boundsByType)
         {
             var elementSpawnerByType = GetElementSpawnerByType(boundsByType);
             
@@ -262,11 +262,11 @@ namespace UnityLevelEditor.RoomSpawning
             var eroom = room.AddComponent<ExtendableRoom>();
             eroom.SetElementSpawner(elementSpawnerByType);
 
-            var wallSpawner = elementSpawnerByType[RoomElementTyp.Wall];
-            var cornerSpawner = elementSpawnerByType[RoomElementTyp.Corner];
-            var floorSpawner = elementSpawnerByType[RoomElementTyp.Floor];
-            var backWallSpawner = elementSpawnerByType[RoomElementTyp.WallTransparent];
-            var backCornerSpawner = elementSpawnerByType[RoomElementTyp.CornerTransparent];
+            var wallSpawner = elementSpawnerByType[RoomElementType.Wall];
+            var cornerSpawner = elementSpawnerByType[RoomElementType.Corner];
+            var floorSpawner = elementSpawnerByType[RoomElementType.Floor];
+            var backWallSpawner = elementSpawnerByType[RoomElementType.WallTransparent];
+            var backCornerSpawner = elementSpawnerByType[RoomElementType.CornerTransparent];
 
             SpawnFrontOrBackOfRoom(spawnInfo, wallSpawner, cornerSpawner, roomElements, eroom, false);
             SpawnRoomCenter(spawnInfo, wallSpawner, floorSpawner, roomElements, eroom, floorGridDictionary);
@@ -280,9 +280,9 @@ namespace UnityLevelEditor.RoomSpawning
             Debug.Log("Room created");
         }
 
-        private Dictionary<RoomElementTyp, ElementSpawner> GetElementSpawnerByType(Dictionary<RoomElementTyp, Bounds> boundsByType)
+        private Dictionary<RoomElementType, ElementSpawner> GetElementSpawnerByType(Dictionary<RoomElementType, Bounds> boundsByType)
         {
-            var dict = new Dictionary<RoomElementTyp, ElementSpawner>();
+            var dict = new Dictionary<RoomElementType, ElementSpawner>();
 
             foreach (var type in boundsByType.Keys)
             {

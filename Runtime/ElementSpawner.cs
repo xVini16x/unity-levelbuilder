@@ -16,9 +16,9 @@ namespace UnityLevelEditor
 
         [SerializeField] private GameObject toInstantiate;
 
-        [SerializeField] private RoomElementTyp type;
+        [SerializeField] private RoomElementType type;
 
-        public ElementSpawner(GameObject toInstantiate, Bounds bounds, RoomElementTyp type)
+        public ElementSpawner(GameObject toInstantiate, Bounds bounds, RoomElementType type)
         {
             this.toInstantiate = toInstantiate;
             this.type = type;
@@ -86,7 +86,7 @@ namespace UnityLevelEditor
                 position.z += factor * (roomElementBounds.extents.z + applicableBounds.extents.z);
             }
 
-            if (type == RoomElementTyp.Floor && roomElement.Type != RoomElementTyp.Floor)
+            if (type == RoomElementType.Floor && roomElement.Type != RoomElementType.Floor)
             {
                 position.y -= roomElementBounds.extents.y - applicableBounds.extents.y;
             }
@@ -101,7 +101,7 @@ namespace UnityLevelEditor
             spawnedObject.name = name;
             spawnedObject.transform.position = position;
             RoomElement roomElement;
-            if (type == RoomElementTyp.Floor)
+            if (type == RoomElementType.Floor)
             {
                 roomElement = spawnedObject.AddComponent<FloorElement>();
             }

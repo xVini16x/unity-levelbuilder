@@ -13,7 +13,7 @@ namespace UnityLevelEditor.RoomExtension
         [field: SerializeField, HideInInspector]
         public FloorGridDictionary FloorGridDictionary { get; set; }
 
-        public void SetElementSpawner(Dictionary<RoomElementTyp, ElementSpawner> elementSpawnerByType)
+        public void SetElementSpawner(Dictionary<RoomElementType, ElementSpawner> elementSpawnerByType)
         {
             ElementSpawner = new List<ElementSpawner>();
             var kvpsOrdered = elementSpawnerByType.OrderBy(kvp => (int) kvp.Key);

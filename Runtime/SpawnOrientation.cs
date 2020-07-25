@@ -63,6 +63,11 @@ namespace UnityLevelEditor.Model
             return (SpawnOrientation) index;
         }
 
+        public static SpawnOrientation Shift(this SpawnOrientation spawnOrientation, bool clockwise)
+        {
+            return clockwise ? spawnOrientation.Shift(1) : spawnOrientation.Shift(-1);
+        }
+
         public static bool IsSideways(this SpawnOrientation spawnOrientation)
         {
             return spawnOrientation == SpawnOrientation.Left || spawnOrientation == SpawnOrientation.Right;
