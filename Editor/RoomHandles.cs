@@ -103,9 +103,8 @@ namespace UnityLevelEditor.RoomExtension
 
             if (EditorGUI.EndChangeCheck())
             {
-                var snapValue = representativeWall.ExtendableRoom.ElementSpawner[(int) RoomElementType.Floor].Bounds.size
-                    .x;
-                var movementDelta = SnapVectorXZ(position - Tools.handlePosition, snapValue);
+                var snapValue = representativeWall.ExtendableRoom.ElementSpawner[(int) RoomElementType.Floor].Bounds.size.x;
+                var movementDelta = SnapVectorXZ(position, Tools.handlePosition, snapValue);
                 if (Mathf.Abs(movementDelta.x) < 0.01f && Mathf.Abs(movementDelta.z) < 0.01f)
                 {
                     return;
@@ -124,10 +123,16 @@ namespace UnityLevelEditor.RoomExtension
             }
         }
         
-        private static Vector3 SnapVectorXZ(Vector3 vector, float snapValue)
+        private static Vector3 SnapVectorXZ(Vector3 newPosition, Vector3 oldPosition, float snapValue)
         {
-            vector.x = Mathf.Round(vector.x / snapValue) * snapValue;
-            vector.z = Mathf.Round(vector.z / snapValue) * snapValue;
+            var vector = newPosition - oldPosition;
+            
+            var snapValueFactorX = Mathf.Clamp(Mathf.Round(vector.x / snapValue), -1, 1);
+            vector.x =  snapValueFactorX * snapValue;
+            
+            var snapValueFactorZ = Mathf.Clamp(Mathf.Round(vector.z / snapValue), -1, 1);
+            vector.z = snapValueFactorZ * snapValue;
+            
             return vector;
         }
 
