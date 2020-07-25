@@ -80,8 +80,14 @@ namespace UnityLevelEditor.RoomExtension
         {
             var wallNeedsToBePlaced = ShorterWallNeedsToBeReplacedThroughFullWall(wallConditions);
 
-            var (newFloor, collision) = SpawnFloorNextToMovedWall(wallConditions.Wall);
+            var (newFloor, collidingFloor) = SpawnFloorNextToMovedWall(wallConditions.Wall);
 
+            if (collidingFloor)
+            {
+                HandleDirectCollision(wallConditions, collidingFloor, newFloor);    
+                return;
+            }
+            
             if (wallNeedsToBePlaced)
             {
                 wallConditions.Wall = EnlargeShortenedWall(wallConditions.Wall);
@@ -290,14 +296,36 @@ namespace UnityLevelEditor.RoomExtension
             if (neighborOfCollidingWall.Type.IsCornerType()) //if corner > delete
             {
                 customSpawner = wallToMove.ExtendableRoom.ElementSpawner[(int) RoomElementType.Wall];
-                var behindNeighbor = neighborOfCollidingWall.GetRoomElementByDirection(wallToMoveDirection);
+                var direction = wallToMoveDirection;
+                var behindNeighbor = neighborOfCollidingWall.GetRoomElementByDirection(direction);
+
+                // We have an inner corner
+                if (behindNeighbor == null)
+                {
+                    direction = direction.Opposite();
+                    behindNeighbor = neighborOfCollidingWall.GetRoomElementByDirection(direction);
+                    
+                    // Connect floor to element behind wall
+                    var floorNeighborDirection = behindNeighbor.SpawnOrientation.Opposite().ToDirection();
+                    var newFloorNeighbor = behindNeighbor.GetRoomElementByDirection(floorNeighborDirection);
+                    newFloor.ConnectElementByDirection(newFloorNeighbor, floorNeighborDirection);
+                    
+                    behindNeighbor.DisconnectFromAllNeighbors();
+                    Undo.DestroyObjectImmediate(behindNeighbor.gameObject);
+                    
+                    neighborOfCollidingWall.DisconnectFromAllNeighbors();
+                    Undo.DestroyObjectImmediate(neighborOfCollidingWall.gameObject);
+
+                    return (null, null);
+                }
+                
                 Undo.RecordObject(behindNeighbor, "");
-                newWall = customSpawner.SpawnNextToRoomElement(behindNeighbor, wallToMoveDirection.Opposite(),
+                newWall = customSpawner.SpawnNextToRoomElement(behindNeighbor, direction.Opposite(),
                     behindNeighbor.SpawnOrientation);
                 Undo.RegisterCreatedObjectUndo(newWall.gameObject, "");
 
-                behindNeighbor.ConnectElementByDirection(newWall, wallToMoveDirection.Opposite());
-                newWall.ConnectElementByDirection(cornerNeighbor, wallToMoveDirection.Opposite());
+                behindNeighbor.ConnectElementByDirection(newWall, direction.Opposite());
+                newWall.ConnectElementByDirection(cornerNeighbor, direction.Opposite());
                 newWall.ConnectElementByDirection(newFloor, newWall.SpawnOrientation.ToDirection().Opposite());
 
                 neighborOfCollidingWall.DisconnectFromAllNeighbors();
