@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
@@ -53,8 +54,13 @@ namespace UnityLevelEditor.RoomExtension
                 return;
             }
 
-            if ((wallConditions.CornerSituation & CornerSituation.CounterClockwise) ==
-                CornerSituation.CounterClockwise)
+            var (clockwiseDiagonalFloor, counterClockwiseDiagonalFloor) = newFloor.ExtendableRoom.FloorGridDictionary.GetDiagonalCollision((FloorElement) newFloor, wallConditions.Wall.SpawnOrientation.ToDirection());
+
+            if (counterClockwiseDiagonalFloor != null)
+            {
+                HandleDiagonalCollision(wallConditions, newFloor, counterClockwiseDiagonalFloor, false);
+            }
+            else if ((wallConditions.CornerSituation & CornerSituation.CounterClockwise) == CornerSituation.CounterClockwise)
             {
                 var newWall = MoveCornerSpawnFullWall(wallConditions, movementDelta, false);
                 newFloor.ConnectElementByDirection(newWall, newWall.SpawnOrientation.ToDirection());
@@ -64,14 +70,18 @@ namespace UnityLevelEditor.RoomExtension
                 Spawn2CornerAnd2ShortWalls(wallConditions, newFloor, false);
             }
 
-            if ((wallConditions.CornerSituation & CornerSituation.Clockwise) ==
-                CornerSituation.Clockwise)
+            if (clockwiseDiagonalFloor != null)
+            {
+                HandleDiagonalCollision(wallConditions, newFloor, clockwiseDiagonalFloor, true);
+            }
+            else if ((wallConditions.CornerSituation & CornerSituation.Clockwise) == CornerSituation.Clockwise)
             {
                 var newWall = MoveCornerSpawnFullWall(wallConditions, movementDelta, true);
                 newFloor.ConnectElementByDirection(newWall, newWall.SpawnOrientation.ToDirection());
             }
             else
             {
+
                 Spawn2CornerAnd2ShortWalls(wallConditions, newFloor, true);
             }
         }
@@ -143,32 +153,32 @@ namespace UnityLevelEditor.RoomExtension
             }
 
             var spawnerList = wallToShrink.ExtendableRoom.ElementSpawner;
-            ElementSpawner spawner;
+            RoomElementType spawnerType; 
 
             switch (wallToShrink.Type)
             {
                 case RoomElementType.Wall:
                     goto case RoomElementType.WallTransparent;
                 case RoomElementType.WallTransparent:
-                    spawner = clockwise
-                        ? spawnerList[(int) RoomElementType.WallShortenedLeft]
-                        : spawnerList[(int) RoomElementType.WallShortenedRight];
+                    spawnerType = clockwise
+                        ? RoomElementType.WallShortenedLeft
+                        : RoomElementType.WallShortenedRight;
                     break;
                 case RoomElementType.WallShortenedLeft:
                     goto case RoomElementType.WallShortenedRight;
                 case RoomElementType.WallShortenedRight:
-                    spawner = spawnerList[(int) RoomElementType.WallShortenedBothEnds];
+                    spawnerType = RoomElementType.WallShortenedBothEnds;
                     break;
                 case RoomElementType.WallShortenedBothEnds:
                     throw new NotSupportedException("Can not shrink more!");
-                    break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
 
-            var direction = wallToShrink.SpawnOrientation.ToDirection().Shift(clockwise ? 1 : -1); // either a left or right shift from the current wall
-            var wallNeighbor = wallToShrink.GetRoomElementByDirection(direction); //either a corner or wall 
-            var wall = spawner.SpawnNextToRoomElement(wallNeighbor, direction.Opposite(), wallToShrink.SpawnOrientation);
+            var spawner = spawnerList[(int) spawnerType];
+            var direction = wallToShrink.SpawnOrientation.Shift(clockwise).ToDirection(); // either a left or right shift from the current wall
+            var spawnPosition = GetWallPositionForShrinking(wallToShrink, spawnerType);
+            var (wall, _) = spawner.SpawnByCenterPosition(spawnPosition, wallToShrink.SpawnOrientation, wallToShrink.ExtendableRoom, "");
 
             //connection handling
             wall.CopyNeighbors(wallToShrink);
@@ -210,7 +220,7 @@ namespace UnityLevelEditor.RoomExtension
             }
             else
             {
-                HandleCollisionNoCorner(wallConditions, collidingWallConditions, newFloor, true);
+                HandleDirectCollisionNoCorner(wallConditions, collidingWallConditions, newFloor, true);
             }
 
 
@@ -224,7 +234,7 @@ namespace UnityLevelEditor.RoomExtension
             }
             else
             {
-                HandleCollisionNoCorner(wallConditions, collidingWallConditions, newFloor, false);
+                HandleDirectCollisionNoCorner(wallConditions, collidingWallConditions, newFloor, false);
             }
 
             //spawn 4 corners & 2 wallsShortenedBothEnds
@@ -336,15 +346,8 @@ namespace UnityLevelEditor.RoomExtension
             Debug.LogError("not supported cases");
             return (null, null);
         }
-
-
-        #endregion
-
-        #region Spawning
-
-        #region Multiple Elements
         
-        private static void HandleCollisionNoCorner(WallConditions wallConditions, WallConditions collidingWallConditions, RoomElement newFloor, bool clockwise)
+        private static void HandleDirectCollisionNoCorner(WallConditions wallConditions, WallConditions collidingWallConditions, RoomElement newFloor, bool clockwise)
         {
             //Handle own neighbors
             var neighboringWall = wallConditions.GetElement(0, clockwise);
@@ -377,6 +380,62 @@ namespace UnityLevelEditor.RoomExtension
             wallInBetween.ConnectElementByDirection(wallInBetweenNeighbor, spawnDirection);
             
         }
+
+        private static void HandleDiagonalCollision(WallConditions wallConditions, RoomElement newFloor, FloorElement diagonalFloor, bool clockwise)
+        {
+            var collidingWall = diagonalFloor.GetRoomElementByDirection(wallConditions.Wall.SpawnOrientation.Opposite().ToDirection());
+            var collidingWallConditions = GetWallConditions(collidingWall);
+            
+            //Replace Colliding wall 
+            var oldWallNeighbor = wallConditions.GetElement(0, clockwise);
+            
+            if (oldWallNeighbor.Type.IsCornerType())
+            {
+                
+                // Shrink wall that next to the corner in clockwise direction from the colliding wall
+                var collidingWallWallAroundCorner = collidingWallConditions.GetElement(1, clockwise); 
+                (collidingWallWallAroundCorner, _) = ShrinkWall(collidingWallWallAroundCorner, false, clockwise);
+                
+                // Shrink colliding wall
+                var (_, corner) = ShrinkWall(collidingWall, true, !clockwise);
+
+                // Spawn new wall in clockwise direction of moved wall
+                var spawnOrientation = wallConditions.Wall.SpawnOrientation.Shift(clockwise);
+                var direction = wallConditions.Wall.SpawnOrientation.Opposite().ToDirection();
+                var newWall = SpawnWallBasedOnCorner(corner, spawnOrientation, direction, RoomElementType.WallShortenedRight);
+                
+                // Connect the new spawned wall to wall that next to the corner in clockwise direction from the moved wall
+                var oldNeighborAroundCornerOfMovedWall = wallConditions.GetElement(1, clockwise);
+                Undo.RecordObject(oldNeighborAroundCornerOfMovedWall, "");
+                newWall.ConnectElementByDirection(oldNeighborAroundCornerOfMovedWall, wallConditions.GetDirection(1, clockwise));
+                // Connect the new spawned wall to the new spawned floor
+                newWall.ConnectElementByDirection(newFloor, newWall.SpawnOrientation.ToDirection().Opposite());
+                
+                (_, corner) = ShrinkWall(wallConditions.Wall, true, !clockwise);
+                corner.ConnectElementByDirection(collidingWallWallAroundCorner, wallConditions.Wall.SpawnOrientation.ToDirection());
+                
+                oldWallNeighbor.DisconnectFromAllNeighbors();
+                Undo.DestroyObjectImmediate(oldWallNeighbor.gameObject);
+
+            }else if (oldWallNeighbor.Type.IsWallType())
+            {
+                ShrinkWall(oldWallNeighbor, true, !clockwise);
+                //spawn 2er wall
+            }
+            
+            
+            var collidingWallNeighboringCorner = collidingWallConditions.GetElement(0, clockwise);
+            collidingWallNeighboringCorner.DisconnectFromAllNeighbors();
+            Undo.DestroyObjectImmediate(collidingWallNeighboringCorner.gameObject);
+            
+        }
+
+        #endregion
+
+        #region Spawning
+
+        #region Multiple Elements
+        
 
         // Standard case move full wall corner
         private static RoomElement MoveCornerSpawnFullWall(WallConditions wallConditions, Vector3 movementDelta,
@@ -548,13 +607,12 @@ namespace UnityLevelEditor.RoomExtension
             var floorGridDictionary = wallToMove.ExtendableRoom.FloorGridDictionary;
             floorGridDictionary.Add(newGridPosition, newFloor as FloorElement);
 
-            //check if there is a collision
-            newGridPosition = GetGridPosition(newFloor, wallDirection);
-
             //Connect elements
             oldFloor.ConnectElementByDirection(newFloor, wallDirection);
-
-            //TODO Check for diagonal floor collision
+            
+            //check if there is a collision
+            newGridPosition = GetGridPosition(newFloor, wallDirection);
+            
             if (floorGridDictionary.ContainsKey(newGridPosition))
             {
                 var collidingFloor = floorGridDictionary[newGridPosition];
@@ -584,19 +642,18 @@ namespace UnityLevelEditor.RoomExtension
             // If we have a double corner, the element after the corner which is always should be a wall should have a corner thereafter
             return wallConditions.GetElement(2, clockwise).Type.IsCornerType();
         }
-
+        
         private static bool ShorterWallNeedsToBeReplacedThroughFullWall(WallConditions wallConditions)
         {
             return HasCornerAndAnotherCornerInDirection(wallConditions, true) ||
                    HasCornerAndAnotherCornerInDirection(wallConditions, false);
         }
-
-
+        
         private static bool IsInnerCorner(RoomElement corner, RoomElement adjacentWall)
         {
             return corner.GetRoomElementByDirection(adjacentWall.SpawnOrientation.ToDirection()) != null;
         }
-
+        
         private static WallConditions GetWallConditions(RoomElement wall, int elementsToExtractPerDirection = 5)
         {
             var wallExtensionScenario = CornerSituation.None;
@@ -739,7 +796,7 @@ namespace UnityLevelEditor.RoomExtension
             return wall.SpawnOrientation.Shift(1);
         }
 
-        private static Vector2Int GetGridPosition(RoomElement oldFloor, Direction spawnDirection)
+        public static Vector2Int GetGridPosition(RoomElement oldFloor, Direction spawnDirection)
         {
             var oldFloorElement = oldFloor as FloorElement;
 
@@ -750,16 +807,21 @@ namespace UnityLevelEditor.RoomExtension
 
             Vector2Int oldFloorGridPosition = oldFloorElement.GridPosition;
 
+            return GetGridPosition(oldFloorGridPosition, spawnDirection);
+        }
+
+        public static Vector2Int GetGridPosition(Vector2Int vectorPos, Direction spawnDirection)
+        {
             switch (spawnDirection)
             {
                 case Direction.Front:
-                    return oldFloorGridPosition + Vector2Int.up;
+                    return vectorPos + Vector2Int.up;
                 case Direction.Right:
-                    return oldFloorGridPosition + Vector2Int.right;
+                    return vectorPos + Vector2Int.right;
                 case Direction.Back:
-                    return oldFloorGridPosition + Vector2Int.down;
+                    return vectorPos + Vector2Int.down;
                 case Direction.Left:
-                    return oldFloorGridPosition + Vector2Int.left;
+                    return vectorPos + Vector2Int.left;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(spawnDirection), spawnDirection,
                         "invalid spawnDirection");
@@ -792,6 +854,63 @@ namespace UnityLevelEditor.RoomExtension
 
             return currentPosition;
         }
+        
+        private static Vector3 GetWallPositionForShrinking(RoomElement wallToShrink, RoomElementType type)
+        {
+            var wallToShrinkDirection = wallToShrink.SpawnOrientation.ToDirection();
+            var newPosition = wallToShrink.transform.position;
+            var spawnerList = wallToShrink.ExtendableRoom.ElementSpawner;
+            var wallToShrinkSpawner = spawnerList[(int) wallToShrink.Type];
+            var newWallSpawner = spawnerList[(int) type];
+            // Assumption wallToShrink should've larger extents than those of given goal type
+            var boundDifference = wallToShrinkSpawner.Bounds.extents.x - newWallSpawner.Bounds.extents.x;
+            
+            if (type == RoomElementType.WallShortenedLeft)
+            {
+                var factor = !wallToShrinkDirection.IsSideways() == wallToShrinkDirection.TowardsNegative() ? -1 : 1;
+
+                if (wallToShrinkDirection.IsSideways())
+                {
+                    newPosition.z += factor * boundDifference;
+                    return newPosition;
+                }
+
+                newPosition.x += factor * boundDifference;
+                return newPosition;
+            }
+            
+            if (type == RoomElementType.WallShortenedRight)
+            {
+                var factor = !wallToShrinkDirection.IsSideways() == wallToShrinkDirection.TowardsNegative() ? 1 : -1;
+                
+                 if (wallToShrinkDirection.IsSideways())
+                {
+                    newPosition.z += factor * boundDifference;
+                    return newPosition;
+                }
+                
+                newPosition.x += factor * boundDifference;
+                return newPosition;
+            }
+
+            if (type == RoomElementType.WallShortenedBothEnds)
+            {
+                var factor = !wallToShrinkDirection.IsSideways() == wallToShrinkDirection.TowardsNegative() ? -1 : 1;
+                factor *= wallToShrink.Type == RoomElementType.WallShortenedRight ? -1 : 1;
+         
+                if (wallToShrinkDirection.IsSideways())
+                {
+                    newPosition.z += factor * boundDifference;
+                    return newPosition;
+                }
+                
+                newPosition.x += factor * boundDifference;
+                return newPosition;
+            }
+            
+            throw new InvalidEnumArgumentException($"Can't shrink to a wall type {type}.");
+        }
+
 
         #endregion
 

@@ -40,6 +40,33 @@ namespace UnityLevelEditor.Model
         }
     }
 
-    [Serializable] public class FloorGridDictionary : SerializableDictionary<Vector2Int, FloorElement> { }
+    [Serializable]
+    public class FloorGridDictionary : SerializableDictionary<Vector2Int, FloorElement>
+    {
+        public (FloorElement clockwiseDiagonalFloor, FloorElement counterClockwiseDiagonalFloor) GetDiagonalCollision(FloorElement floorElement, Direction wallDirection)
+        {
+            var gridPos = RoomExtension.RoomExtension.GetGridPosition(  floorElement, wallDirection);
+
+            var clockwiseDirection = RoomExtension.RoomExtension.GetGridPosition(gridPos, wallDirection.Shift(1));
+            var counterClockwiseDirection = RoomExtension.RoomExtension.GetGridPosition(gridPos, wallDirection.Shift(-1));
+
+            FloorElement clockwise = null;
+            FloorElement counterClockwise = null;
+
+            if (ContainsKey(clockwiseDirection))
+            {
+                clockwise = this[clockwiseDirection];
+            }
+
+            if (ContainsKey(counterClockwiseDirection))
+            {
+                counterClockwise = this[counterClockwiseDirection];
+            }
+
+            return (clockwise, counterClockwise);
+        }
+        
+      
+    }
 
 }

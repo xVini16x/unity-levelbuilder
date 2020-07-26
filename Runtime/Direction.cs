@@ -85,4 +85,5 @@ public static class DirectionExtensions
                 throw new ArgumentOutOfRangeException(nameof(direction), direction, $"Direction {direction} not supported.");
         }
     }
+    
 }
