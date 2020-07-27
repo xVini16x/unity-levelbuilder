@@ -428,7 +428,7 @@ namespace UnityLevelEditor.RoomExtension
                 Undo.RecordObject(oldNeighborAroundCornerOfMovedWall, "");
                 newWall.ConnectElementByDirection(oldNeighborAroundCornerOfMovedWall, wallConditions.GetDirection(1, clockwise));
                 // Connect the new spawned wall to the new spawned floor
-                newWall.ConnectElementByDirection(newFloor, wallToMoveOppositeDirection);
+                newWall.ConnectElementByDirection(newFloor, newWall.SpawnOrientation.Opposite().ToDirection());
 
                 oldWallNeighbor.DisconnectFromAllNeighbors();
                 Undo.DestroyObjectImmediate(oldWallNeighbor.gameObject);
