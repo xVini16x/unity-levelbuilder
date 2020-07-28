@@ -314,7 +314,7 @@ namespace UnityLevelEditor.RoomSpawning
             }
             else
             {
-                indices = new Vector2Int(0, roomElements.GetLength(0) - 1);
+                indices = new Vector2Int(0, roomElements.GetLength(1) - 1);
                 wallOrientation = SpawnOrientation.Front;
                 firstCornerOrientation = SpawnOrientation.Right;
                 secondCornerOrientation = SpawnOrientation.Back;
