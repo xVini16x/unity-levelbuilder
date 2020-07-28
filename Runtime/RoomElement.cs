@@ -125,7 +125,8 @@ namespace UnityLevelEditor.Model
                     throw new ArgumentOutOfRangeException(nameof(direction), direction, $"Unsupported direction {direction}");
             }
         }
-
+        
+        #if UNITY_EDITOR
         public void CopyNeighbors(RoomElement toCopy)
         {
             Undo.RecordObject(toCopy, "");
@@ -159,5 +160,7 @@ namespace UnityLevelEditor.Model
                 }
             }
         }
+        
+        #endif
     }
 }

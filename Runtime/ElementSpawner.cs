@@ -7,9 +7,11 @@ using UnityLevelEditor.RoomExtension;
 
 namespace UnityLevelEditor
 {
+    
     [Serializable]
     public class ElementSpawner
     {
+    
         [field: SerializeField] public Bounds Bounds { get; private set; }
 
         [field: SerializeField] private Bounds SidewaysRotatedBounds { get; set; }
@@ -44,7 +46,8 @@ namespace UnityLevelEditor
             position.z += applicableBounds.extents.z;
             return position;
         }
-
+        
+        #if UNITY_EDITOR
         public (RoomElement roomElement, Vector3 dimensions) SpawnByLeftBottomCenter(Vector3 position,
             SpawnOrientation orientation, ExtendableRoom parent, string name)
         {
@@ -120,5 +123,7 @@ namespace UnityLevelEditor
             Undo.RegisterCreatedObjectUndo(roomElement.gameObject, "");
             return roomElement;
         }
+        
+        #endif
     }
 }

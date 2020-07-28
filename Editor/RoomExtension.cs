@@ -739,6 +739,38 @@ namespace UnityLevelEditor.RoomExtension
         #endregion
 
         #region Get Information Around RoomElements
+        
+        public static Vector2Int GetGridPosition(Vector2Int vectorPos, Direction spawnDirection)
+        {
+            switch (spawnDirection)
+            {
+                case Direction.Front:
+                    return vectorPos + Vector2Int.up;
+                case Direction.Right:
+                    return vectorPos + Vector2Int.right;
+                case Direction.Back:
+                    return vectorPos + Vector2Int.down;
+                case Direction.Left:
+                    return vectorPos + Vector2Int.left;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(spawnDirection), spawnDirection,
+                        "invalid spawnDirection");
+            }
+        }
+
+        public static Vector2Int GetGridPosition(RoomElement oldFloor, Direction spawnDirection)
+        {
+            var oldFloorElement = oldFloor as FloorElement;
+
+            if (oldFloorElement == null)
+            {
+                throw new Exception("GetGridPosition expects floorElement as parameter!");
+            }
+
+            Vector2Int oldFloorGridPosition = oldFloorElement.GridPosition;
+
+            return GetGridPosition(oldFloorGridPosition, spawnDirection);
+        }
 
         private static bool HasCornerAndAnotherCornerInDirection(WallConditions wallConditions, bool clockwise)
         {
@@ -905,39 +937,7 @@ namespace UnityLevelEditor.RoomExtension
                 $"Not supported wall orientation {wall.SpawnOrientation} and corner in direction {direction}");
             return wall.SpawnOrientation.Shift(1);
         }
-
-        public static Vector2Int GetGridPosition(RoomElement oldFloor, Direction spawnDirection)
-        {
-            var oldFloorElement = oldFloor as FloorElement;
-
-            if (oldFloorElement == null)
-            {
-                throw new Exception("GetGridPosition expects floorElement as parameter!");
-            }
-
-            Vector2Int oldFloorGridPosition = oldFloorElement.GridPosition;
-
-            return GetGridPosition(oldFloorGridPosition, spawnDirection);
-        }
-
-        public static Vector2Int GetGridPosition(Vector2Int vectorPos, Direction spawnDirection)
-        {
-            switch (spawnDirection)
-            {
-                case Direction.Front:
-                    return vectorPos + Vector2Int.up;
-                case Direction.Right:
-                    return vectorPos + Vector2Int.right;
-                case Direction.Back:
-                    return vectorPos + Vector2Int.down;
-                case Direction.Left:
-                    return vectorPos + Vector2Int.left;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(spawnDirection), spawnDirection,
-                        "invalid spawnDirection");
-            }
-        }
-
+        
         private static Vector3 GetWallPositionBasedOnShorterWall(RoomElement wallToMove)
         {
             var spawnerList = wallToMove.ExtendableRoom.ElementSpawner;
