@@ -101,7 +101,9 @@ namespace UnityLevelEditor.RoomExtension
 
             if (wallNeedsToBePlaced)
             {
+                var activeWall = Selection.activeGameObject.Equals(wallConditions.Wall.gameObject);
                 wallConditions.Wall = EnlargeShortenedWall(wallConditions.Wall);
+                AddToSelection(wallConditions.Wall, activeWall);
             }
 
             var (clockwiseDiagonalFloor, counterClockwiseDiagonalFloor) = newFloor.ExtendableRoom.FloorGridDictionary.GetDiagonalCollision((FloorElement) newFloor, wallConditions.Wall.SpawnOrientation.ToDirection());
@@ -237,13 +239,30 @@ namespace UnityLevelEditor.RoomExtension
                     GetCornerOrientationBasedOnWall(wall, direction.Opposite()));
                 wall.ConnectElementByDirection(corner, direction.Opposite());
             }
-
+            
             //delete old wall
             wallToShrink.DisconnectFromAllNeighbors();
             Undo.DestroyObjectImmediate(wallToShrink.gameObject);
 
             return (wall, corner);
         }
+        
+        private static void AddToSelection(RoomElement newSelectedElement, bool asActiveObject)
+        {
+
+            Debug.Log("Add to selection");
+            var oldSelection = Selection.objects;
+            var newSelection = new UnityEngine.Object[oldSelection.Length + 1];
+            oldSelection.CopyTo(newSelection, 0);
+            newSelection[newSelection.Length - 1] = newSelectedElement.gameObject;
+            Selection.objects = newSelection;
+            
+            if (asActiveObject)
+            {
+                Selection.activeGameObject = newSelectedElement.gameObject;
+            }
+        }
+
 
         #endregion
         
@@ -505,7 +524,13 @@ namespace UnityLevelEditor.RoomExtension
             var (_, collidingWallCorner) = ShrinkWall(collidingWall, true, !clockwise);
 
             // Shrink moved wall
+            var movedWall = wallConditions.Wall;
+            var activeWall = Selection.activeGameObject.Equals(wallConditions.Wall.gameObject);
+
             var (shrunkWall, corner) = ShrinkWall(wallConditions.Wall, true, !clockwise);
+
+            AddToSelection(shrunkWall, activeWall);
+            
             wallConditions.Wall = shrunkWall;
             corner.ConnectElementByDirection(collidingWallWallAroundCorner, wallToMoveDirection);
 
@@ -544,7 +569,6 @@ namespace UnityLevelEditor.RoomExtension
             collidingWallNeighboringCorner.DisconnectFromAllNeighbors();
             Undo.DestroyObjectImmediate(collidingWallNeighboringCorner.gameObject);
         }
-
         #endregion
 
         #region Spawning
