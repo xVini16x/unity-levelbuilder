@@ -104,7 +104,6 @@ namespace UnityLevelEditor.RoomExtension
                 wallConditions.Wall = EnlargeShortenedWall(wallConditions.Wall);
             }
 
-
             var (clockwiseDiagonalFloor, counterClockwiseDiagonalFloor) = newFloor.ExtendableRoom.FloorGridDictionary.GetDiagonalCollision((FloorElement) newFloor, wallConditions.Wall.SpawnOrientation.ToDirection());
 
             if (counterClockwiseDiagonalFloor != null && !IsInnerCorner(wallConditions.GetElement(0, false), wallConditions.Wall))
@@ -641,27 +640,11 @@ namespace UnityLevelEditor.RoomExtension
                 var wallAfterOtherWallConnectedToCorner = wallConditions.GetElement(2, clockwise);
                 Undo.RecordObject(wallAfterOtherWallConnectedToCorner, "");
 
-                // Move other wall connected to corner with movement Delta
-                Undo.RecordObject(otherWallConnectedToCorner.transform, "");
-                otherWallConnectedToCorner.transform.position += movementDelta;
-
-                // Connect other wall connected to wall to element next-next Element and delete next Element (in-between them)
-                var neighbor = wallConditions.GetElement(3, clockwise);
-                otherWallConnectedToCorner.ConnectElementByDirection(neighbor,
-                    wallConditions.GetDirection(2, clockwise));
-
-                if (neighbor.Type.IsCornerType())
-                {
-                    (otherWallConnectedToCorner, _) = ShrinkWall(otherWallConnectedToCorner, false, clockwise);
-                }
-
-                // Connect other wall to their new floor
-                var directionOfFirstElement = wallConditions.GetDirection(0, clockwise);
-                neighbor = wallAfterOtherWallConnectedToCorner.GetRoomElementByDirection(directionOfFirstElement);
-                otherWallConnectedToCorner.ConnectElementByDirection(neighbor, directionOfFirstElement);
-
+                (wallAfterOtherWallConnectedToCorner, _) = ShrinkWall(wallAfterOtherWallConnectedToCorner, false, clockwise);
+                corner.ConnectElementByDirection(wallAfterOtherWallConnectedToCorner, wallConditions.GetDirection(1, clockwise));
+                
                 // Destroy unnecessary in-between wall element
-                Undo.DestroyObjectImmediate(wallAfterOtherWallConnectedToCorner.gameObject);
+                Undo.DestroyObjectImmediate(otherWallConnectedToCorner.gameObject);
 
                 // Move corner by movementDelta
                 Undo.RecordObject(corner.transform, "");
