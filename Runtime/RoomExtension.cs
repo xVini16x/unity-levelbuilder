@@ -614,7 +614,7 @@ namespace UnityLevelEditor.RoomExtension
                 floorNextToOtherWallConnectedToCorner.ConnectElementByDirection(newFloor, otherWallDirection);
 
 
-                if (wallConditions.WallWasReplaced)
+                if (wallConditions.WallWasReplaced && wallConditions.Wall.Type == RoomElementType.Wall)
                 {
                     //delete corner (next to otherWallConnectedToCorner)
                     var unnecessaryCorner = wallConditions.GetElement(2, clockwise);
