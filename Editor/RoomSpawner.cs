@@ -11,6 +11,7 @@ namespace UnityLevelEditor.RoomSpawning
     public class RoomSpawner : EditorWindow
     {
         private const float RoomSizeLimit = 200f;
+        [SerializeField] private bool loadedDefaultValues = false;
         
         #region Inspector Fields
         [SerializeField] private GameObject fullWall;
@@ -28,6 +29,26 @@ namespace UnityLevelEditor.RoomSpawning
 
         #region UI
         #region Window Creation
+
+        private void OnFocus()
+        {
+            if (!loadedDefaultValues)
+            {
+                loadedDefaultValues = true;
+                var levelBuilderSettings = LevelBuilderSettings.GetSerializedSettings();
+                fullWall = levelBuilderSettings.FindProperty("fullWall").objectReferenceValue as GameObject;
+                fullWallBackside = levelBuilderSettings.FindProperty("fullWallBackside").objectReferenceValue as GameObject;
+                wallShortenedLeft = levelBuilderSettings.FindProperty("wallShortenedLeft").objectReferenceValue as GameObject;
+                wallShortenedRight = levelBuilderSettings.FindProperty("wallShortenedRight").objectReferenceValue as GameObject;
+                wallShortenedBothSides = levelBuilderSettings.FindProperty("wallShortenedBothSides").objectReferenceValue as GameObject;
+                floor = levelBuilderSettings.FindProperty("floor").objectReferenceValue as GameObject;
+                corner = levelBuilderSettings.FindProperty("corner").objectReferenceValue as GameObject;
+                cornerBackside = levelBuilderSettings.FindProperty("cornerBackside").objectReferenceValue as GameObject;
+                roomName = levelBuilderSettings.FindProperty("roomName").stringValue;
+                roomSize = levelBuilderSettings.FindProperty("roomSize").vector2Value;
+            }
+        }
+
         // Add menu named "My Window" to the Window menu
         [MenuItem("Window/Unity Levelbuilder Tool")]
         static void Init()
