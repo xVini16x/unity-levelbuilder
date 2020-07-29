@@ -11,12 +11,9 @@ namespace UnityLevelEditor.RoomExtension
     public static class RoomExtension
     {
         #region Extension Based On Wall Type (Entry Point)
-
-        public static int i = 0;
+        
         public static void ExtendTheRoom(List<RoomElement> walls, Vector3 movementDelta)
         {
-            var currentI = i++;
-            Debug.Log("Start extending " + currentI);
             Undo.IncrementCurrentGroup();
             Undo.SetCurrentGroupName("Room Extension");
             var undoGroupId = Undo.GetCurrentGroup();
@@ -28,7 +25,6 @@ namespace UnityLevelEditor.RoomExtension
             {
                 var wallDirection = wall.SpawnOrientation.ToDirection();
                 var floor = (FloorElement) wall.GetRoomElementByDirection(wallDirection.Opposite());
-                //Debug.Log("Floor Pos" + floor.GridPosition);
                 floorsAndWallDirections.Add((floor, wallDirection));
             }
             
@@ -61,7 +57,6 @@ namespace UnityLevelEditor.RoomExtension
             }
 
             Undo.CollapseUndoOperations(undoGroupId);
-            Debug.Log("Finished extending " + currentI);
         }
 
         private static void ExtendFullWall(WallConditions wallConditions, Vector3 movementDelta)
@@ -444,8 +439,6 @@ namespace UnityLevelEditor.RoomExtension
             ElementSpawner customSpawner;
             if (neighborOfCollidingWall.Type.IsWallType()) //if wall > wall shortened one side
             {
-                //Debug.Log("Called");
-
                 customSpawner = clockwise
                     ? wallToMove.ExtendableRoom.ElementSpawner[(int) RoomElementType.WallShortenedLeft]
                     : wallToMove.ExtendableRoom.ElementSpawner[(int) RoomElementType.WallShortenedRight];
@@ -586,7 +579,6 @@ namespace UnityLevelEditor.RoomExtension
             }
             else if (oldWallNeighbor.Type.IsWallType())
             {
-                Debug.Log("");
                 var (_, cornerNextToWallNeighbor) = ShrinkWall(oldWallNeighbor, true, clockwise);
 
                 var spawnOrientation = wallToMoveSpawnOrientation.Shift(clockwise);

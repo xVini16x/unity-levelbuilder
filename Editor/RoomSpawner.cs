@@ -277,7 +277,6 @@ namespace UnityLevelEditor.RoomSpawning
             Undo.RegisterCreatedObjectUndo(room, "Room Creation");
             Undo.SetCurrentGroupName("Room Creation");
             Undo.CollapseUndoOperations(Undo.GetCurrentGroup());
-            Debug.Log("Room created");
         }
 
         private Dictionary<RoomElementType, ElementSpawner> GetElementSpawnerByType(Dictionary<RoomElementType, Bounds> boundsByType)

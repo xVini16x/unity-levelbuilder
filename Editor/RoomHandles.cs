@@ -32,18 +32,15 @@ namespace UnityLevelEditor.RoomExtension
         {
             EditorTools.activeToolChanged += ChangeIcon;
             ChangeIcon();
-            Debug.Log("Enable Tool");
         }
 
         private void OnDisable()
         {
-            Debug.Log("Disable");
             EditorTools.activeToolChanged -= ChangeIcon;
         }
 
         private void ChangeIcon()
         {
-            //Debug.Log("Changed Tool");
             Texture2D icon = EditorTools.IsActiveTool(this) ? toolIconActive : toolIcon;
 
             iconContent = new GUIContent()
@@ -122,8 +119,7 @@ namespace UnityLevelEditor.RoomExtension
                 {
                     return;
                 }
-
-                Debug.Log("Movement Delta " + movementDelta);
+                
                 RoomExtension.ExtendTheRoom(selectedWalls, movementDelta);
             }
         }
