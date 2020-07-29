@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
 using UnityLevelEditor.Model;
@@ -105,11 +103,27 @@ namespace UnityLevelEditor.RoomExtension
             {
                 var snapValue = representativeWall.ExtendableRoom.ElementSpawner[(int) RoomElementType.Floor].Bounds.size.x;
                 var movementDelta = SnapVectorXZ(position, Tools.handlePosition, snapValue);
+                
+                if (representativeWall.SpawnOrientation.IsSideways())
+                {
+                    movementDelta.z = 0;
+                }
+                else
+                {
+                    movementDelta.x = 0;
+                }
+
+                if (representativeWall.SpawnOrientation.TowardsNegative() == (movementDelta.x > 0.01f || movementDelta.z > 0.01f))
+                {
+                    return;
+                }
+                
                 if (Mathf.Abs(movementDelta.x) < 0.01f && Mathf.Abs(movementDelta.z) < 0.01f)
                 {
                     return;
                 }
 
+                Debug.Log("Movement Delta " + movementDelta);
                 RoomExtension.ExtendTheRoom(selectedWalls, movementDelta);
             }
         }
@@ -203,7 +217,10 @@ namespace UnityLevelEditor.RoomExtension
             SpawnOrientation orientation)
         {
             return Selection.transforms.Select(t => t.GetComponent<RoomElement>())
-                .Where(r => r != null && r.Type == type && r.SpawnOrientation == orientation).ToList();
+                .Where(r => r != null 
+                            && ((type.IsWallType() && r.Type.IsWallType()) || (type.IsCornerType() && r.Type.IsCornerType()) || r.Type == type) 
+                            && r.SpawnOrientation == orientation)
+                .ToList();
         }
 
         #endregion
