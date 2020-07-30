@@ -26,11 +26,38 @@ namespace UnityLevelEditor.Model
         [field: SerializeField, HideInInspector]
         public ExtendableRoom ExtendableRoom { get; set; }
 
-        /**
-         * Represents rotation dependent on our fix camera view
-         */
         [field: SerializeField, HideInInspector]
         public SpawnOrientation SpawnOrientation { get; set; }
+
+        private MeshRenderer MeshRenderer
+        {
+            get
+            {
+                if (meshRenderer == null)
+                {
+                    meshRenderer = GetComponentInChildren<MeshRenderer>();
+                }
+
+                return meshRenderer;
+            }
+        }
+
+        private MeshRenderer meshRenderer;
+        
+        private MaterialSlotMapper MaterialSlotMapper
+        {
+            get
+            {
+                if (materialSlotMapper == null)
+                {
+                    materialSlotMapper = GetComponent<MaterialSlotMapper>();
+                }
+
+                return materialSlotMapper;
+            }
+        }
+        
+        private MaterialSlotMapper materialSlotMapper;
 
         public void ConnectLeftElement(RoomElement left)
         {
@@ -125,19 +152,62 @@ namespace UnityLevelEditor.Model
                     throw new ArgumentOutOfRangeException(nameof(direction), direction, $"Unsupported direction {direction}");
             }
         }
+
+        public void SetAllMaterialsTransparent()
+        {
+            var material = ExtendableRoom.TransparentMaterial;
+            var materials = MeshRenderer.sharedMaterials;
+            Undo.RecordObject(MeshRenderer, "");
+            
+            for(var i = 0; i < materials.Length; i++)
+            {
+                materials[i] = material;
+            }
+
+            MeshRenderer.sharedMaterials = materials;
+        }
+
+        public void SetTransparentMaterial(MaterialSlotType materialSlotType)
+        {
+            SetMaterial(ExtendableRoom.TransparentMaterial, materialSlotType);
+        }
+
+        public void SetWallSideMaterial(MaterialSlotType materialSlotType)
+        {
+            SetMaterial(ExtendableRoom.WallSideMaterial, materialSlotType);
+        }
+        
+        private void SetMaterial(Material material, MaterialSlotType materialSlotType)
+        {
+            var materials = MeshRenderer.sharedMaterials;
+            Undo.RecordObject(MeshRenderer, "");
+            materials[MaterialSlotMapper.GetMaterialSlotIndex(materialSlotType)] = material;
+            MeshRenderer.sharedMaterials = materials;
+        }
+
+        public void CopySideAndTopMaterials(RoomElement copySource)
+        {
+            var materials = MeshRenderer.sharedMaterials;
+            Undo.RecordObject(MeshRenderer, "");
+            var copySourceMaterials = copySource.MeshRenderer.sharedMaterials;
+            materials[MaterialSlotMapper.GetMaterialSlotIndex(MaterialSlotType.Left)] = copySourceMaterials[copySource.MaterialSlotMapper.GetMaterialSlotIndex(MaterialSlotType.Left)];
+            materials[MaterialSlotMapper.GetMaterialSlotIndex(MaterialSlotType.Right)] = copySourceMaterials[copySource.MaterialSlotMapper.GetMaterialSlotIndex(MaterialSlotType.Right)];
+            materials[MaterialSlotMapper.GetMaterialSlotIndex(MaterialSlotType.Top)] = copySourceMaterials[copySource.MaterialSlotMapper.GetMaterialSlotIndex(MaterialSlotType.Top)];
+            MeshRenderer.sharedMaterials = materials;
+        }
         
         #if UNITY_EDITOR
-        public void CopyNeighbors(RoomElement toCopy)
+        public void CopyNeighbors(RoomElement copySource)
         {
-            Undo.RecordObject(toCopy, "");
+            Undo.RecordObject(copySource, "");
             
             foreach (var direction in Enum.GetValues(typeof(Direction)).Cast<Direction>())
             {
-                var element = toCopy.GetRoomElementByDirection(direction);
+                var element = copySource.GetRoomElementByDirection(direction);
                 if(element == null){continue;}
                 Undo.RecordObject(element, "");
                 ConnectElementByDirection(element, direction);
-                toCopy.ConnectElementByDirection(null, direction);
+                copySource.ConnectElementByDirection(null, direction);
             }
         }
 

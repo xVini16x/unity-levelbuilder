@@ -10,7 +10,6 @@ namespace UnityLevelEditor
     [Serializable]
     public class ElementSpawner
     {
-    
         [field: SerializeField] public Bounds Bounds { get; private set; }
 
         [field: SerializeField] private Bounds SidewaysRotatedBounds { get; set; }
@@ -95,6 +94,7 @@ namespace UnityLevelEditor
 
             return Spawn(position, spawnOrientation, parent, "");
         }
+        
 
         private RoomElement Spawn(Vector3 position, SpawnOrientation orientation, ExtendableRoom parent, string name)
         {

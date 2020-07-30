@@ -12,6 +12,12 @@ namespace UnityLevelEditor.RoomExtension
 
         [field: SerializeField, HideInInspector]
         public FloorGridDictionary FloorGridDictionary { get; set; }
+        
+        [field: SerializeField, HideInInspector]
+        public Material TransparentMaterial { get; set; }
+        
+        [field: SerializeField, HideInInspector]
+        public Material WallSideMaterial { get; set; }
 
         public void SetElementSpawner(Dictionary<RoomElementType, ElementSpawner> elementSpawnerByType)
         {
