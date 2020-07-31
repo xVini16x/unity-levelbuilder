@@ -15,6 +15,8 @@ class LevelBuilderSettings : ScriptableObject
     [SerializeField] private GameObject floor;
     [SerializeField] private GameObject corner;
     [SerializeField] private GameObject cornerBackside;
+    [SerializeField] private Material transparentMaterial;
+    [SerializeField] private Material wallSideMaterial;
     [SerializeField] private string roomName;
     [SerializeField] private Vector2 roomSize;
 
@@ -33,6 +35,8 @@ class LevelBuilderSettings : ScriptableObject
             settings.floor = null;
             settings.corner = null;
             settings.cornerBackside = null;
+            settings.transparentMaterial = null;
+            settings.wallSideMaterial = null;
             settings.roomName = "StandardRoom";
             settings.roomSize = new Vector2(1, 1);
 

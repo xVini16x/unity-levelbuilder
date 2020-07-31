@@ -15,11 +15,13 @@ namespace UnityLevelEditor.RoomSpawning
         
         #region Inspector Fields
         [SerializeField] private GameObject fullWall;
+        [SerializeField] private GameObject fullWallBackside;
         [SerializeField] private GameObject wallShortenedLeft;
         [SerializeField] private GameObject wallShortenedRight;
         [SerializeField] private GameObject wallShortenedBothSides;
         [SerializeField] private GameObject floor;
         [SerializeField] private GameObject corner;
+        [SerializeField] private GameObject cornerBackside;
         [SerializeField] private Material transparentMaterial;
         [SerializeField] private Material wallSideMaterial;
         
@@ -44,6 +46,8 @@ namespace UnityLevelEditor.RoomSpawning
                 floor = levelBuilderSettings.FindProperty("floor").objectReferenceValue as GameObject;
                 corner = levelBuilderSettings.FindProperty("corner").objectReferenceValue as GameObject;
                 cornerBackside = levelBuilderSettings.FindProperty("cornerBackside").objectReferenceValue as GameObject;
+                transparentMaterial = levelBuilderSettings.FindProperty("transparentMaterial").objectReferenceValue as Material;
+                wallSideMaterial = levelBuilderSettings.FindProperty("wallSideMaterial").objectReferenceValue as Material;
                 roomName = levelBuilderSettings.FindProperty("roomName").stringValue;
                 roomSize = levelBuilderSettings.FindProperty("roomSize").vector2Value;
             }
@@ -62,11 +66,13 @@ namespace UnityLevelEditor.RoomSpawning
         {
             GUILayout.Label("Room Element Prefabs", EditorStyles.boldLabel);
             fullWall = EditorGUILayout.ObjectField("Full Wall", fullWall, typeof(GameObject), true) as GameObject;
+            fullWallBackside = EditorGUILayout.ObjectField("Full Wall Backside", fullWallBackside, typeof(GameObject), true) as GameObject;
             wallShortenedLeft = EditorGUILayout.ObjectField("Wall Shortened Left Side", wallShortenedLeft, typeof(GameObject), true) as GameObject;
             wallShortenedRight = EditorGUILayout.ObjectField("Wall Shortened Right Side", wallShortenedRight, typeof(GameObject), true) as GameObject;
             wallShortenedBothSides = EditorGUILayout.ObjectField("Wall Shortened Both Sides", wallShortenedBothSides, typeof(GameObject), true) as GameObject;
             floor = EditorGUILayout.ObjectField("Floor Prefab", floor, typeof(GameObject), true) as GameObject;
             corner = EditorGUILayout.ObjectField("Corner Prefab", corner, typeof(GameObject), true) as GameObject;
+            cornerBackside = EditorGUILayout.ObjectField("Corner Backside Prefab", cornerBackside, typeof(GameObject), true) as GameObject;
             transparentMaterial = EditorGUILayout.ObjectField("Transparent Material", transparentMaterial, typeof(Material), false) as Material;
             wallSideMaterial = EditorGUILayout.ObjectField("Wall Side Material", wallSideMaterial, typeof(Material), false) as Material;
 
