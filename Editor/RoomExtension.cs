@@ -1133,8 +1133,7 @@ namespace UnityLevelEditor.RoomExtension
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-
-            //TODO Other cases not supported
+            
             Debug.LogError(
                 $"Not supported wall orientation {wall.SpawnOrientation} and corner in direction {direction}");
             return wall.SpawnOrientation.Shift(1);
@@ -1150,7 +1149,6 @@ namespace UnityLevelEditor.RoomExtension
             var shortWallSpawner = spawnerList[(int) RoomElementType.WallShortenedLeft];
             var diff = newWallSpawner.Bounds.extents.x - shortWallSpawner.Bounds.extents.x;
 
-            //TODO: Improve factor selection (low priority)
             var factor = wallToMove.Type == RoomElementType.WallShortenedLeft ? -1 : 1; //pos or negative
             factor = wallToMove.SpawnOrientation.TowardsNegative() ? factor : -factor;
 
