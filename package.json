@@ -1,8 +1,8 @@
 {
   "name": "de.hats.unity-levelbuilder",
-  "version": "0.0.0",
-  "displayName": "Unity Levelbuilder",
-  "description": "This is a custom tool to speed up development of levels",
+  "version": "1.0.0",
+  "displayName": "Level Builder Tool",
+  "description": "This is a custom tool to speed up prototyping room-based level design.",
   "unity": "2019.4",
   "keywords": [
     "level",
@@ -10,7 +10,7 @@
     "levelbuilder"
   ],
   "author": {
-    "name": "Vincenzo Angrisano & Kira Wanjek",
+    "name": "Vincenzo Angrisano, Kira Wanjek",
     "email": "vincenzo.angrisano@haw-hamburg.de"
   }
 }
