@@ -100,6 +100,10 @@ namespace UnityLevelEditor.RoomExtension
                 Spawn2CornerAnd2ShortWalls(wallConditions, newFloor, true);
             }
 
+            if(wallConditions.Wall == null)
+            {
+                return;
+            }
             ReplaceWallSideMaterialsIfNecessary(wallConditions.Wall, newFloor, wallConditions.Wall.ElementFront);
         }
 
@@ -112,48 +116,54 @@ namespace UnityLevelEditor.RoomExtension
             if (collidingFloor)
             {
                 HandleDirectCollision(wallConditions, collidingFloor, newFloor);
+            }
+            else
+            {
+                if (wallNeedsToBePlaced)
+                {
+                    wallConditions.Wall = EnlargeShortenedWall(wallConditions.Wall);
+                }
+
+                var (clockwiseDiagonalFloor, counterClockwiseDiagonalFloor) =
+                    newFloor.ExtendableRoom.FloorGridDictionary.GetDiagonalCollision((FloorElement) newFloor,
+                        wallConditions.Wall.SpawnOrientation.ToDirection());
+
+                if (counterClockwiseDiagonalFloor != null &&
+                    !IsInnerCorner(wallConditions.GetElement(0, false), wallConditions.Wall))
+                {
+                    HandleDiagonalCollision(wallConditions, newFloor, counterClockwiseDiagonalFloor, false);
+                }
+                else if ((wallConditions.CornerSituation & CornerSituation.CounterClockwise) ==
+                         CornerSituation.CounterClockwise)
+                {
+                    HandleCornerNextToShorterWall(wallConditions, newFloor, movementDelta, false);
+                }
+                else
+                {
+                    Spawn2CornerAnd2ShortWalls(wallConditions, newFloor, false);
+                }
+
+                if (clockwiseDiagonalFloor != null &&
+                    !IsInnerCorner(wallConditions.GetElement(0, true), wallConditions.Wall))
+                {
+                    HandleDiagonalCollision(wallConditions, newFloor, clockwiseDiagonalFloor, true);
+                }
+                else if ((wallConditions.CornerSituation & CornerSituation.Clockwise) ==
+                         CornerSituation.Clockwise)
+                {
+                    HandleCornerNextToShorterWall(wallConditions, newFloor, movementDelta, true);
+                }
+                else
+                {
+                    Spawn2CornerAnd2ShortWalls(wallConditions, newFloor, true);
+                }
+            }
+            
+            if(wallConditions.Wall == null)
+            {
                 return;
             }
-
-
-            if (wallNeedsToBePlaced)
-            {
-                wallConditions.Wall = EnlargeShortenedWall(wallConditions.Wall);
-            }
-
-            var (clockwiseDiagonalFloor, counterClockwiseDiagonalFloor) =
-                newFloor.ExtendableRoom.FloorGridDictionary.GetDiagonalCollision((FloorElement) newFloor,
-                    wallConditions.Wall.SpawnOrientation.ToDirection());
-
-            if (counterClockwiseDiagonalFloor != null &&
-                !IsInnerCorner(wallConditions.GetElement(0, false), wallConditions.Wall))
-            {
-                HandleDiagonalCollision(wallConditions, newFloor, counterClockwiseDiagonalFloor, false);
-            }
-            else if ((wallConditions.CornerSituation & CornerSituation.CounterClockwise) ==
-                     CornerSituation.CounterClockwise)
-            {
-                HandleCornerNextToShorterWall(wallConditions, newFloor, movementDelta, false);
-            }
-            else
-            {
-                Spawn2CornerAnd2ShortWalls(wallConditions, newFloor, false);
-            }
-
-            if (clockwiseDiagonalFloor != null &&
-                !IsInnerCorner(wallConditions.GetElement(0, true), wallConditions.Wall))
-            {
-                HandleDiagonalCollision(wallConditions, newFloor, clockwiseDiagonalFloor, true);
-            }
-            else if ((wallConditions.CornerSituation & CornerSituation.Clockwise) ==
-                     CornerSituation.Clockwise)
-            {
-                HandleCornerNextToShorterWall(wallConditions, newFloor, movementDelta, true);
-            }
-            else
-            {
-                Spawn2CornerAnd2ShortWalls(wallConditions, newFloor, true);
-            }
+            ReplaceWallSideMaterialsIfNecessary(wallConditions.Wall, newFloor, wallConditions.Wall.ElementFront);
         }
 
         private static void ExtendShortestWall(WallConditions wallConditions, Vector3 movementDelta)
@@ -217,6 +227,7 @@ namespace UnityLevelEditor.RoomExtension
                 wallToMove.ExtendableRoom, "");
             Undo.RegisterCreatedObjectUndo(newWall.gameObject, "");
             newWall.CopyNeighbors(wallToMove);
+            newWall.CopySideAndTopMaterials(wallToMove);
 
             if (Selection.Contains(wallToMove.gameObject))
             {
@@ -808,7 +819,7 @@ namespace UnityLevelEditor.RoomExtension
                     //Delte corner next to moved wall
                     corner.DisconnectFromAllNeighbors();
                     Undo.DestroyObjectImmediate(corner.gameObject);
-                    
+
                     //Delte elelementAfterOtherWallConnectedToCorner which is a corner
                     elementAfterOtherWallConnectedToCorner.DisconnectFromAllNeighbors();
                     Undo.DestroyObjectImmediate(elementAfterOtherWallConnectedToCorner.gameObject);
@@ -816,7 +827,7 @@ namespace UnityLevelEditor.RoomExtension
 
                 // Destroy unnecessary in-between wall element
                 Undo.DestroyObjectImmediate(otherWallConnectedToCorner.gameObject);
-                
+
                 if (wallToMove.SpawnOrientation == SpawnOrientation.Back)
                 {
                     wallToMove.SetTransparentMaterial(MaterialSlotType.Top);
