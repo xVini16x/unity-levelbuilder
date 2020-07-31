@@ -11,16 +11,16 @@ namespace UnityLevelEditor.Model
         [field: SerializeField, HideInInspector]
         public RoomElementType Type { get; set; }
 
-        [field: SerializeField]
+        [field: SerializeField, HideInInspector]
         public RoomElement ElementFront { get; private set; }
 
-        [field: SerializeField]
+        [field: SerializeField, HideInInspector]
         public RoomElement ElementLeft { get; private set; }
 
-        [field: SerializeField]
+        [field: SerializeField, HideInInspector]
         public RoomElement ElementBack { get; private set; }
 
-        [field: SerializeField]
+        [field: SerializeField, HideInInspector]
         public RoomElement ElementRight { get; private set; }
 
         [field: SerializeField, HideInInspector]

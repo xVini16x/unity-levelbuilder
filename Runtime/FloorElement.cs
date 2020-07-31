@@ -3,8 +3,6 @@ using UnityLevelEditor.Model;
 
 public class FloorElement : RoomElement
 {
-    //toDO: add hideInspector
-    [field: SerializeField]
+    [field: SerializeField, HideInInspector]
     public Vector2Int GridPosition { get; set; }
-
 }
