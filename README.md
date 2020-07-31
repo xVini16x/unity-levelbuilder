@@ -76,7 +76,7 @@ All 3D models that can be rendered by the Unity MeshRenderer Component can be us
  
 <img src="/Documentation/img/All_Sizes_with_Arrows.jpg" width="600" /> 
 Elements from left to right: Corner, Wall Shortened Both Sides, Wall Shortened Left, Wall Shortened Right, Full Wall.
-<br>
+<br><br>
  
 To use the models they need to be included in a prefab that obeys to the following rules:
   - The prefab needs to include the MeshRenderer somewhere in it's hierarchy (doesn't need to be top element)
