@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using JetBrains.Annotations;
@@ -100,10 +100,11 @@ namespace UnityLevelEditor.RoomExtension
                 Spawn2CornerAnd2ShortWalls(wallConditions, newFloor, true);
             }
 
-            if(wallConditions.Wall == null)
+            if (wallConditions.Wall == null)
             {
                 return;
             }
+
             ReplaceWallSideMaterialsIfNecessary(wallConditions.Wall, newFloor, wallConditions.Wall.ElementFront);
         }
 
@@ -158,11 +159,12 @@ namespace UnityLevelEditor.RoomExtension
                     Spawn2CornerAnd2ShortWalls(wallConditions, newFloor, true);
                 }
             }
-            
-            if(wallConditions.Wall == null)
+
+            if (wallConditions.Wall == null)
             {
                 return;
             }
+
             ReplaceWallSideMaterialsIfNecessary(wallConditions.Wall, newFloor, wallConditions.Wall.ElementFront);
         }
 
@@ -217,30 +219,27 @@ namespace UnityLevelEditor.RoomExtension
 
         #region Replace
 
-        private static RoomElement EnlargeShortenedWall(RoomElement wallToMove)
+        private static RoomElement EnlargeShortenedWall(RoomElement wallToEnlarge)
         {
-            var spawnerList = wallToMove.ExtendableRoom.ElementSpawner;
+            var spawnerList = wallToEnlarge.ExtendableRoom.ElementSpawner;
             //replace this wall and delete corner
             var newWallSpawner = spawnerList[(int) RoomElementType.Wall];
-            var newPosition = GetWallPositionBasedOnShorterWall(wallToMove);
-            var (newWall, _) = newWallSpawner.SpawnByCenterPosition(newPosition, wallToMove.SpawnOrientation,
-                wallToMove.ExtendableRoom, "");
+            var newPosition = GetPositionForWallReplacement(wallToEnlarge, RoomElementType.Wall, false);
+            var (newWall, _) = newWallSpawner.SpawnByCenterPosition(newPosition, wallToEnlarge.SpawnOrientation,
+                wallToEnlarge.ExtendableRoom, "");
             Undo.RegisterCreatedObjectUndo(newWall.gameObject, "");
-            newWall.CopyNeighbors(wallToMove);
-            newWall.CopySideAndTopMaterials(wallToMove);
+            newWall.CopyNeighbors(wallToEnlarge);
+            newWall.CopySideAndTopMaterials(wallToEnlarge);
 
-            if (Selection.Contains(wallToMove.gameObject))
+            if (Selection.Contains(wallToEnlarge.gameObject))
             {
                 AddToSelection(newWall, false);
             }
 
-            Undo.DestroyObjectImmediate(wallToMove.gameObject);
+            Undo.DestroyObjectImmediate(wallToEnlarge.gameObject);
             return newWall;
         }
 
-        /**
-         *  Dont forget to connect corner with other wall
-         */
         private static (RoomElement shrunkWall, RoomElement corner) ShrinkWall(RoomElement wallToShrink,
             bool spawnWithCorner, bool clockwise)
         {
@@ -274,7 +273,7 @@ namespace UnityLevelEditor.RoomExtension
             var direction =
                 wallToShrink.SpawnOrientation.Shift(clockwise)
                     .ToDirection(); // either a left or right shift from the current wall
-            var spawnPosition = GetWallPositionForShrinking(wallToShrink, spawnerType);
+            var spawnPosition = GetPositionForWallReplacement(wallToShrink, spawnerType, true);
             var (shrunkWall, _) = spawner.SpawnByCenterPosition(spawnPosition, wallToShrink.SpawnOrientation,
                 wallToShrink.ExtendableRoom, "");
 
@@ -1133,7 +1132,7 @@ namespace UnityLevelEditor.RoomExtension
                 default:
                     throw new ArgumentOutOfRangeException();
             }
-            
+
             Debug.LogError(
                 $"Not supported wall orientation {wall.SpawnOrientation} and corner in direction {direction}");
             return wall.SpawnOrientation.Shift(1);
@@ -1196,60 +1195,63 @@ namespace UnityLevelEditor.RoomExtension
             roomElement.SetTransparentMaterial(materialSlotType);
         }
 
-        private static Vector3 GetWallPositionForShrinking(RoomElement wallToShrink, RoomElementType type)
+        private static Vector3 GetPositionForWallReplacement(RoomElement wallToReplace, RoomElementType newWallType,
+            bool isShrinkingOperation)
         {
-            var wallToShrinkDirection = wallToShrink.SpawnOrientation.ToDirection();
-            var newPosition = wallToShrink.transform.position;
-            var spawnerList = wallToShrink.ExtendableRoom.ElementSpawner;
-            var wallToShrinkSpawner = spawnerList[(int) wallToShrink.Type];
-            var newWallSpawner = spawnerList[(int) type];
-            // Assumption wallToShrink should've larger extents than those of given goal type
-            var boundDifference = wallToShrinkSpawner.Bounds.extents.x - newWallSpawner.Bounds.extents.x;
+            var wallToShrinkDirection = wallToReplace.SpawnOrientation.ToDirection();
+            var newPosition = wallToReplace.transform.position;
+            var spawnerList = wallToReplace.ExtendableRoom.ElementSpawner;
+            var wallToShrinkSpawner = spawnerList[(int) wallToReplace.Type];
+            var newWallSpawner = spawnerList[(int) newWallType];
+            float boundDifference;
+            int signFactor = 1;
 
-            if (type == RoomElementType.WallShortenedLeft)
+            if (isShrinkingOperation)
             {
-                var factor = !wallToShrinkDirection.IsSideways() == wallToShrinkDirection.TowardsNegative() ? -1 : 1;
+                // Assumption wallToShrink should've larger extents than those of given goal type
+                boundDifference = wallToShrinkSpawner.Bounds.extents.x - newWallSpawner.Bounds.extents.x;
+            }
+            else
+            {
+                boundDifference = newWallSpawner.Bounds.extents.x - wallToShrinkSpawner.Bounds.extents.x;
+            }
 
-                if (wallToShrinkDirection.IsSideways())
-                {
-                    newPosition.z += factor * boundDifference;
-                    return newPosition;
-                }
+            if (newWallType == RoomElementType.WallShortenedLeft && isShrinkingOperation)
+            {
+                signFactor = GetSignFactorForShrinkingShortenedWall(wallToShrinkDirection, false);
+            }
 
-                newPosition.x += factor * boundDifference;
+            if (newWallType == RoomElementType.WallShortenedRight && isShrinkingOperation)
+            {
+                signFactor = GetSignFactorForShrinkingShortenedWall(wallToShrinkDirection, true);
+            }
+
+            if (newWallType == RoomElementType.WallShortenedBothEnds && isShrinkingOperation)
+            {
+                signFactor = !wallToShrinkDirection.IsSideways() == wallToShrinkDirection.TowardsNegative() ? 1 : -1;
+                signFactor *= wallToReplace.Type == RoomElementType.WallShortenedRight ? -1 : 1;
+            }
+
+            if (newWallType == RoomElementType.Wall && !isShrinkingOperation)
+            {
+                signFactor = -1 * GetSignFactorForShrinkingShortenedWall(wallToShrinkDirection, wallToReplace.Type == RoomElementType.WallShortenedRight);
+            }
+
+            if (wallToShrinkDirection.IsSideways())
+            {
+                newPosition.z += signFactor * boundDifference;
                 return newPosition;
             }
 
-            if (type == RoomElementType.WallShortenedRight)
-            {
-                var factor = !wallToShrinkDirection.IsSideways() == wallToShrinkDirection.TowardsNegative() ? 1 : -1;
+            newPosition.x += signFactor * boundDifference;
+            return newPosition;
+        }
 
-                if (wallToShrinkDirection.IsSideways())
-                {
-                    newPosition.z += factor * boundDifference;
-                    return newPosition;
-                }
-
-                newPosition.x += factor * boundDifference;
-                return newPosition;
-            }
-
-            if (type == RoomElementType.WallShortenedBothEnds)
-            {
-                var factor = !wallToShrinkDirection.IsSideways() == wallToShrinkDirection.TowardsNegative() ? 1 : -1;
-                factor *= wallToShrink.Type == RoomElementType.WallShortenedRight ? -1 : 1;
-
-                if (wallToShrinkDirection.IsSideways())
-                {
-                    newPosition.z += factor * boundDifference;
-                    return newPosition;
-                }
-
-                newPosition.x += factor * boundDifference;
-                return newPosition;
-            }
-
-            throw new InvalidEnumArgumentException($"Can't shrink to a wall type {type}.");
+        private static int GetSignFactorForShrinkingShortenedWall(Direction wallToShrinkDirection,
+            bool isShortenedRight)
+        {
+            var signFactor = !wallToShrinkDirection.IsSideways() == wallToShrinkDirection.TowardsNegative() ? 1 : -1;
+            return isShortenedRight ? signFactor : (-1 * signFactor);
         }
 
         #endregion
