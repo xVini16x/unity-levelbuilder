@@ -28,6 +28,12 @@ Room Spawning             |  Room Extension
 
 ---
 
+## Purpose
+
+The tool is developed for usage in applications that have a fixed camera that is looking in the positive z-axis in Unity as it was developed with 2.5D Games in mind. Therefore that are at the back side of the room (the one closest to the camera) will be made completly transparent while others have their top still visible. If working with a perspective camera working with dynamic visible / invisible side walls through a shader is recommended.
+
+--
+
 ## Documentation 
 
 ### Room Spawning
@@ -56,6 +62,27 @@ Small Room | Medium Room
 4. Drag more to create hallways:
    - <img src="/Documentation/img/Extend_MultipleWalls.png" width="600" />
      
+### Creating own 3D models 
+
+All 3D models that can be rendered by the Unity MeshRenderer Component can be used for the room creation if they follow the following rules:
+
+  - For the tool to work correctly the 3D Models need to have their origin in the center of the 3D-Model for all axis and they need to have their correct orientation without having any rotation applied. (Front sides are oriented towards negative z-direction)
+  - Model for full wall needs to have the same length as the floor (x-size of wall needs to be same as x/z of floor)
+  - Wall and corner thickness needs to be the same (z-size of wall needs to be the same as x/z of corner)
+  - Corners and floor neeed to have a square shape (in x/z-direction)
+  - Length (x-direction) of wall shortened on one side (left or right) need to match the length of full wall minus corner length (x-direction)
+  - Length (x-direction) of wall shortened on both side needs to match the length of full wall minus two corner lenghts (x-direction)
+  - All models have one material slot for each side (front, back, left, right, top, bottom)
+ 
+To use the models they need to be included in a prefab that obeys to the following rules:
+  - The prefab needs to include the MeshRenderer somewhere in it's hierarchy (doesn't need to be top element)
+  - The prefab needs to have a MaterialSlotMapper Component attached in which all indices are correctly assigned.
+  - All wall prefabs have the correct material attached to their front- and top-side and are from all other sides transparent (materials for the left and right side will be dynamically assigned when the wall is spawned
+  - Corner prefabs have the correct material assigned to their front-, right- and top-side all other sides are transparent.
+  - The floor prefabs have the correct material assigned to all sides.
+
+After you created the prefabs you can add them as default values in the Project Settings or can directly add them in the RoomSpawner Window. 
+
 ---
 
 ## Team
@@ -78,11 +105,7 @@ Programming 1 - Summer Term 2020
 - **I have a lot of exceptions and the tool does not behave as expected. What did I do wrong?**
 	- Rooms spawnned and extended with this tool rely on an internal data structure. If you modify the room manually for example by deleting or moving parts, the data structure can get broken and the tool features will not work anymore.
 - **How do I create my own prefabs for *room spawning*?**
-    - You can use any 3D modeling software to create meshes. Please be aware that the prefabs need to stick to some conditions
-	  - basic wall needs to have the same length as the floor
-	  - wall and corner thickness needs to be the same
-	  - corners and floor neeed to have a square shape
-	  - length of shortened walls (left and right) need to match the length of basic wall minus corner length
+    - You can use any 3D modeling software to create meshes. Please be aware that the prefabs need to stick to some conditions. See [here](#creating-own-3d-models) for more information.
 
 ---
 
