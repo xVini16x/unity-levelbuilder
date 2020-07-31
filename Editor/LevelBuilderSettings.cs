@@ -8,13 +8,11 @@ class LevelBuilderSettings : ScriptableObject
     private const string FolderPath = "Assets/Editor";
 
     [SerializeField] private GameObject fullWall;
-    [SerializeField] private GameObject fullWallBackside;
     [SerializeField] private GameObject wallShortenedLeft;
     [SerializeField] private GameObject wallShortenedRight;
     [SerializeField] private GameObject wallShortenedBothSides;
     [SerializeField] private GameObject floor;
     [SerializeField] private GameObject corner;
-    [SerializeField] private GameObject cornerBackside;
     [SerializeField] private Material transparentMaterial;
     [SerializeField] private Material wallSideMaterial;
     [SerializeField] private string roomName;
@@ -28,13 +26,11 @@ class LevelBuilderSettings : ScriptableObject
             settings = ScriptableObject.CreateInstance<LevelBuilderSettings>();
             //default values
             settings.fullWall = null;
-            settings.fullWallBackside = null;
             settings.wallShortenedLeft = null;
             settings.wallShortenedRight = null;
             settings.wallShortenedBothSides = null;
             settings.floor = null;
             settings.corner = null;
-            settings.cornerBackside = null;
             settings.transparentMaterial = null;
             settings.wallSideMaterial = null;
             settings.roomName = "StandardRoom";
