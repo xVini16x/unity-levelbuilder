@@ -318,7 +318,7 @@ namespace UnityLevelEditor.RoomExtension
             {
                 UpdateWallSideTexture(wall, true);
 
-                if (elementInFrontDirectionOfWall != null && wall.Type.IsWallType())
+                if (elementInFrontDirectionOfWall != null && elementInFrontDirectionOfWall.Type.IsWallType())
                 {
                     UpdateWallSideTexture(elementInFrontDirectionOfWall, false);
                 }
