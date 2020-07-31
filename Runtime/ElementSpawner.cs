@@ -6,7 +6,6 @@ using UnityLevelEditor.RoomExtension;
 
 namespace UnityLevelEditor
 {
-    
     [Serializable]
     public class ElementSpawner
     {
@@ -44,23 +43,23 @@ namespace UnityLevelEditor
             position.z += applicableBounds.extents.z;
             return position;
         }
-        
-        #if UNITY_EDITOR
+
+#if UNITY_EDITOR
         public (RoomElement roomElement, Vector3 dimensions) SpawnByLeftBottomCenter(Vector3 position,
-            SpawnOrientation orientation, ExtendableRoom parent, string name)
+            SpawnOrientation orientation, ExtendableRoom parent)
         {
             var applicableBounds = orientation.IsSideways() ? SidewaysRotatedBounds : Bounds;
             position.x += applicableBounds.extents.x;
             position.y += applicableBounds.extents.y;
 
-            return (Spawn(position, orientation, parent, name), applicableBounds.size);
+            return (Spawn(position, orientation, parent), applicableBounds.size);
         }
 
         public (RoomElement roomElement, Vector3 dimensions) SpawnByCenterPosition(Vector3 position,
-            SpawnOrientation orientation, ExtendableRoom parent, string name)
+            SpawnOrientation orientation, ExtendableRoom parent)
         {
             var applicableBounds = orientation.IsSideways() ? SidewaysRotatedBounds : Bounds;
-            return (Spawn(position, orientation, parent, name), applicableBounds.size);
+            return (Spawn(position, orientation, parent), applicableBounds.size);
         }
 
 
@@ -75,7 +74,7 @@ namespace UnityLevelEditor
                 : roomElementSpawner.Bounds;
 
             var factor = direction.TowardsNegative() ? -1 : 1;
-            //var spawnOrientation = GetOrientationBasedOnRoomElement(roomElement, direction);
+
             var applicableBounds = spawnOrientation.IsSideways() ? SidewaysRotatedBounds : Bounds;
 
             if (direction.IsSideways())
@@ -92,15 +91,14 @@ namespace UnityLevelEditor
                 position.y -= roomElementBounds.extents.y - applicableBounds.extents.y;
             }
 
-            return Spawn(position, spawnOrientation, parent, "");
+            return Spawn(position, spawnOrientation, parent);
         }
-        
 
-        private RoomElement Spawn(Vector3 position, SpawnOrientation orientation, ExtendableRoom parent, string name)
+
+        private RoomElement Spawn(Vector3 position, SpawnOrientation orientation, ExtendableRoom parent)
         {
             var angle = orientation.ToAngle();
             var spawnedObject = (GameObject) PrefabUtility.InstantiatePrefab(toInstantiate, parent.transform);
-            spawnedObject.name = name;
             spawnedObject.transform.position = position;
             RoomElement roomElement;
             if (type == RoomElementType.Floor)
@@ -111,6 +109,7 @@ namespace UnityLevelEditor
             {
                 roomElement = spawnedObject.AddComponent<RoomElement>();
             }
+
             if (Mathf.Abs(angle) > 0.01f)
             {
                 spawnedObject.transform.Rotate(Vector3.up, angle);
@@ -122,7 +121,7 @@ namespace UnityLevelEditor
             Undo.RegisterCreatedObjectUndo(roomElement.gameObject, "");
             return roomElement;
         }
-        
-        #endif
+
+#endif
     }
 }

@@ -43,7 +43,7 @@ namespace UnityLevelEditor.Model
         }
 
         private MeshRenderer meshRenderer;
-        
+
         private MaterialSlotMapper MaterialSlotMapper
         {
             get
@@ -56,8 +56,10 @@ namespace UnityLevelEditor.Model
                 return materialSlotMapper;
             }
         }
-        
+
         private MaterialSlotMapper materialSlotMapper;
+
+        #region Neigbor Handling
 
         public void ConnectLeftElement(RoomElement left)
         {
@@ -65,7 +67,7 @@ namespace UnityLevelEditor.Model
             {
                 ElementLeft.ElementRight = null;
             }
-            
+
             ElementLeft = left;
             if (left != null)
             {
@@ -79,35 +81,35 @@ namespace UnityLevelEditor.Model
             {
                 ElementFront.ElementBack = null;
             }
-            
+
             ElementFront = front;
             if (front != null)
             {
                 front.ElementBack = this;
             }
         }
-        
-        public void ConnectBackElement(RoomElement back)
+
+        private void ConnectBackElement(RoomElement back)
         {
             if (ElementBack != null && ElementBack.ElementFront != null && ElementBack.ElementFront.Equals(this))
             {
                 ElementBack.ElementFront = null;
             }
-            
+
             ElementBack = back;
             if (back != null)
             {
-                back.ElementFront = this;  
+                back.ElementFront = this;
             }
         }
 
-        public void ConnectRightElement(RoomElement right)
+        private void ConnectRightElement(RoomElement right)
         {
             if (ElementRight != null && ElementRight.ElementLeft != null && ElementRight.ElementLeft.Equals(this))
             {
                 ElementRight.ElementLeft = null;
             }
-            
+
             ElementRight = right;
             if (right != null)
             {
@@ -117,7 +119,7 @@ namespace UnityLevelEditor.Model
 
         public RoomElement GetRoomElementByDirection(Direction direction)
         {
-            switch(direction)
+            switch (direction)
             {
                 case Direction.Front:
                     return ElementFront;
@@ -153,13 +155,57 @@ namespace UnityLevelEditor.Model
             }
         }
 
+#if UNITY_EDITOR
+        public void CopyNeighbors(RoomElement copySource)
+        {
+            Undo.RecordObject(copySource, "");
+
+            foreach (var direction in Enum.GetValues(typeof(Direction)).Cast<Direction>())
+            {
+                var element = copySource.GetRoomElementByDirection(direction);
+                if (element == null)
+                {
+                    continue;
+                }
+
+                Undo.RecordObject(element, "");
+                ConnectElementByDirection(element, direction);
+                copySource.ConnectElementByDirection(null, direction);
+            }
+        }
+
+        public void DisconnectFromAllNeighbors()
+        {
+            Undo.RecordObject(this, "");
+            foreach (var direction in Enum.GetValues(typeof(Direction)).Cast<Direction>())
+            {
+                var neighbor = GetRoomElementByDirection(direction);
+                if (neighbor != null)
+                {
+                    Undo.RecordObject(neighbor, "");
+                    var neighborCounterDirectionElement = neighbor.GetRoomElementByDirection(direction.Opposite());
+                    if (neighborCounterDirectionElement != null && neighborCounterDirectionElement.Equals(this))
+                    {
+                        neighbor.ConnectElementByDirection(null, direction.Opposite());
+                    }
+
+                    ConnectElementByDirection(null, direction);
+                }
+            }
+        }
+#endif
+
+        #endregion
+
+        #region Material Handling
+
         public void SetAllMaterialsTransparent()
         {
             var material = ExtendableRoom.TransparentMaterial;
             var materials = MeshRenderer.sharedMaterials;
             Undo.RecordObject(MeshRenderer, "");
-            
-            for(var i = 0; i < materials.Length; i++)
+
+            for (var i = 0; i < materials.Length; i++)
             {
                 materials[i] = material;
             }
@@ -176,7 +222,7 @@ namespace UnityLevelEditor.Model
         {
             SetMaterial(ExtendableRoom.WallSideMaterial, materialSlotType);
         }
-        
+
         private void SetMaterial(Material material, MaterialSlotType materialSlotType)
         {
             var materials = MeshRenderer.sharedMaterials;
@@ -195,42 +241,7 @@ namespace UnityLevelEditor.Model
             materials[MaterialSlotMapper.GetMaterialSlotIndex(MaterialSlotType.Top)] = copySourceMaterials[copySource.MaterialSlotMapper.GetMaterialSlotIndex(MaterialSlotType.Top)];
             MeshRenderer.sharedMaterials = materials;
         }
-        
-        #if UNITY_EDITOR
-        public void CopyNeighbors(RoomElement copySource)
-        {
-            Undo.RecordObject(copySource, "");
-            
-            foreach (var direction in Enum.GetValues(typeof(Direction)).Cast<Direction>())
-            {
-                var element = copySource.GetRoomElementByDirection(direction);
-                if(element == null){continue;}
-                Undo.RecordObject(element, "");
-                ConnectElementByDirection(element, direction);
-                copySource.ConnectElementByDirection(null, direction);
-            }
-        }
 
-        public void DisconnectFromAllNeighbors()
-        {
-            Undo.RecordObject(this, "");
-            foreach (var direction in Enum.GetValues(typeof(Direction)).Cast<Direction>())
-            {
-                var neighbor = GetRoomElementByDirection(direction);
-                if (neighbor != null)
-                {
-                   Undo.RecordObject(neighbor, "");
-                   var neighborCounterDirectionElement = neighbor.GetRoomElementByDirection(direction.Opposite());
-                   if (neighborCounterDirectionElement != null && neighborCounterDirectionElement.Equals(this))
-                   {
-                       neighbor.ConnectElementByDirection(null, direction.Opposite());
-                   }
-            
-                   ConnectElementByDirection(null, direction);
-                }
-            }
-        }
-        
-        #endif
+        #endregion
     }
 }

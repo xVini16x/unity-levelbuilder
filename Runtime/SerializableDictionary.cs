@@ -16,7 +16,7 @@ namespace UnityLevelEditor.Model
         {
             keys.Clear();
             values.Clear();
-            foreach (KeyValuePair<TKey, TValue> pair in this)
+            foreach (var pair in this)
             {
                 keys.Add(pair.Key);
                 values.Add(pair.Value);
@@ -43,7 +43,5 @@ namespace UnityLevelEditor.Model
     [Serializable]
     public class FloorGridDictionary : SerializableDictionary<Vector2Int, FloorElement>
     {
-
     }
-
 }

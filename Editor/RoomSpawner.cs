@@ -10,10 +10,11 @@ namespace UnityLevelEditor.RoomSpawning
 {
     public class RoomSpawner : EditorWindow
     {
-        private const float RoomSizeLimit = 200f;
-        [SerializeField] private bool loadedDefaultValues = false;
-        
+        private const int RoomSizeLimit = 100;
+        [SerializeField] private bool loadedDefaultValues;
+
         #region Inspector Fields
+
         [SerializeField] private GameObject fullWall;
         [SerializeField] private GameObject wallShortenedLeft;
         [SerializeField] private GameObject wallShortenedRight;
@@ -22,43 +23,47 @@ namespace UnityLevelEditor.RoomSpawning
         [SerializeField] private GameObject corner;
         [SerializeField] private Material transparentMaterial;
         [SerializeField] private Material wallSideMaterial;
-        
+
         [SerializeField] private string roomName = "StandardRoom";
-        [SerializeField] private Vector2 roomSize = new Vector2(1, 1);
+        [SerializeField] private Vector2Int roomSize = new Vector2Int(1, 1);
+
         #endregion
 
         #region UI
+
         #region Window Creation
 
         private void OnFocus()
         {
-            if (!loadedDefaultValues)
+            if (loadedDefaultValues)
             {
-                loadedDefaultValues = true;
-                var levelBuilderSettings = LevelBuilderSettings.GetSerializedSettings();
-                fullWall = levelBuilderSettings.FindProperty("fullWall").objectReferenceValue as GameObject;
-                wallShortenedLeft = levelBuilderSettings.FindProperty("wallShortenedLeft").objectReferenceValue as GameObject;
-                wallShortenedRight = levelBuilderSettings.FindProperty("wallShortenedRight").objectReferenceValue as GameObject;
-                wallShortenedBothSides = levelBuilderSettings.FindProperty("wallShortenedBothSides").objectReferenceValue as GameObject;
-                floor = levelBuilderSettings.FindProperty("floor").objectReferenceValue as GameObject;
-                corner = levelBuilderSettings.FindProperty("corner").objectReferenceValue as GameObject;
-                transparentMaterial = levelBuilderSettings.FindProperty("transparentMaterial").objectReferenceValue as Material;
-                wallSideMaterial = levelBuilderSettings.FindProperty("wallSideMaterial").objectReferenceValue as Material;
-                roomName = levelBuilderSettings.FindProperty("roomName").stringValue;
-                roomSize = levelBuilderSettings.FindProperty("roomSize").vector2Value;
+                return;
             }
+
+            loadedDefaultValues = true;
+            var levelBuilderSettings = LevelBuilderSettings.GetSerializedSettings();
+            fullWall = levelBuilderSettings.FindProperty("fullWall").objectReferenceValue as GameObject;
+            wallShortenedLeft = levelBuilderSettings.FindProperty("wallShortenedLeft").objectReferenceValue as GameObject;
+            wallShortenedRight = levelBuilderSettings.FindProperty("wallShortenedRight").objectReferenceValue as GameObject;
+            wallShortenedBothSides = levelBuilderSettings.FindProperty("wallShortenedBothSides").objectReferenceValue as GameObject;
+            floor = levelBuilderSettings.FindProperty("floor").objectReferenceValue as GameObject;
+            corner = levelBuilderSettings.FindProperty("corner").objectReferenceValue as GameObject;
+            transparentMaterial = levelBuilderSettings.FindProperty("transparentMaterial").objectReferenceValue as Material;
+            wallSideMaterial = levelBuilderSettings.FindProperty("wallSideMaterial").objectReferenceValue as Material;
+            roomName = levelBuilderSettings.FindProperty("roomName").stringValue;
+            roomSize = levelBuilderSettings.FindProperty("roomSize").vector2IntValue;
         }
 
         // Add menu named "My Window" to the Window menu
         [MenuItem("Window/Unity Levelbuilder Tool")]
-        static void Init()
+        private static void Init()
         {
             // Get existing open window or if none, make a new one:
-            RoomSpawner window = (RoomSpawner) EditorWindow.GetWindow(typeof(RoomSpawner));
+            var window = (RoomSpawner) EditorWindow.GetWindow(typeof(RoomSpawner));
             window.Show();
         }
 
-        void OnGUI()
+        private void OnGUI()
         {
             GUILayout.Label("Room Element Prefabs", EditorStyles.boldLabel);
             fullWall = EditorGUILayout.ObjectField("Full Wall", fullWall, typeof(GameObject), true) as GameObject;
@@ -80,7 +85,7 @@ namespace UnityLevelEditor.RoomSpawning
             }
 
             Dictionary<RoomElementType, Bounds> boundsByType;
-            
+
             try
             {
                 boundsByType = GetAllBoundsByType();
@@ -97,31 +102,30 @@ namespace UnityLevelEditor.RoomSpawning
                 return;
             }
 
-            var numberOfWalls = new Vector2Int();
             // Calculate valid room sizes (in Unity Units) based on wall and corner size for creation of slider
             var fullWallBounds = boundsByType[RoomElementType.Wall];
             var wallXLength = fullWallBounds.size.x;
             var minRoomSize = wallXLength + 2 * boundsByType[RoomElementType.Corner].size.x;
-            var (_, maxRoomSize) = CalculateNumberOfWallsAndRoomSize(RoomSizeLimit, wallXLength, minRoomSize);
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Room Size X");
-            (numberOfWalls.x, roomSize.x) = CalculateNumberOfWallsAndRoomSize(EditorGUILayout.Slider(roomSize.x, minRoomSize, maxRoomSize),wallXLength, minRoomSize);
+            roomSize.x = EditorGUILayout.IntSlider(roomSize.x, 1, RoomSizeLimit);
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Room Size Z");
-            (numberOfWalls.y, roomSize.y) = CalculateNumberOfWallsAndRoomSize(EditorGUILayout.Slider(roomSize.y, minRoomSize, maxRoomSize), wallXLength, minRoomSize);
+            roomSize.y = EditorGUILayout.IntSlider(roomSize.y, 1, RoomSizeLimit);
             EditorGUILayout.EndHorizontal();
-            
-            var roomSize3D = new Vector3(roomSize.x, fullWallBounds.size.y, roomSize.y);
+
+            var roomSize3D = new Vector3(minRoomSize + ((roomSize.x - 1) * wallXLength), fullWallBounds.size.y, minRoomSize + ((roomSize.y - 1) * wallXLength));
 
             if (GUILayout.Button("Create Room"))
             {
-                var spawnInfo = new SpawnInfo(Vector3.zero, roomSize3D, numberOfWalls);
+                var spawnInfo = new SpawnInfo(Vector3.zero, roomSize3D, roomSize);
                 SpawnNewRoom(spawnInfo, boundsByType);
             }
         }
+
         #endregion
 
         #region Validation
@@ -150,7 +154,7 @@ namespace UnityLevelEditor.RoomSpawning
         private Dictionary<RoomElementType, Bounds> GetAllBoundsByType()
         {
             var dict = new Dictionary<RoomElementType, Bounds>();
-            
+
             foreach (var type in Enum.GetValues(typeof(RoomElementType)).Cast<RoomElementType>())
             {
                 dict[type] = GetBoundsOfPrefab(GetPrefabByType(type), type);
@@ -158,16 +162,16 @@ namespace UnityLevelEditor.RoomSpawning
 
             return dict;
         }
-        
+
         private bool PrefabsAreAssigned()
         {
             return fullWall && wallShortenedLeft && wallShortenedRight && wallShortenedBothSides && floor && corner;
         }
-        
+
         private Bounds GetBoundsOfPrefab(GameObject prefab, RoomElementType type)
         {
             var meshRenderer = prefab.GetComponentInChildren<MeshRenderer>();
-            
+
             if (meshRenderer == null)
             {
                 throw new MissingComponentException("Room elements are expected to contain a mesh renderer. The " + type.ToString() + " prefab doesn't seem to have a mesh renderer in it's hierarchy. Please add one.");
@@ -180,7 +184,7 @@ namespace UnityLevelEditor.RoomSpawning
         {
             var sameXZTypes = new[] {RoomElementType.Corner, RoomElementType.Floor};
 
-            foreach(var type in sameXZTypes)
+            foreach (var type in sameXZTypes)
             {
                 if (!CheckXZSameSize(boundsByType[type], boundsByType.ToString(), out message))
                 {
@@ -193,8 +197,8 @@ namespace UnityLevelEditor.RoomSpawning
             var cornerZ = boundsByType[RoomElementType.Corner].size.z;
             var tempMessage = $"The following elements need to have the same z-value: {RoomElementType.Corner} ({cornerZ:F}) ";
 
-            bool failed = false;
-            
+            var failed = false;
+
             foreach (var type in wallTypes)
             {
                 var size = boundsByType[type].size.z;
@@ -210,7 +214,7 @@ namespace UnityLevelEditor.RoomSpawning
 
             var wallX = boundsByType[RoomElementType.Wall].size.x;
             var floorX = boundsByType[RoomElementType.Floor].size.x;
-            
+
             if (Mathf.Abs(wallX - floorX) > 0.01f)
             {
                 message = $"X-direction of wall ({wallX:F}) and floor ({floorX:F}) has to be the same size.";
@@ -220,7 +224,7 @@ namespace UnityLevelEditor.RoomSpawning
             var wallShortenedLeftX = boundsByType[RoomElementType.WallShortenedLeft].size.x;
             var wallShortenedRightX = boundsByType[RoomElementType.WallShortenedRight].size.x;
             var expectedWallLength = wallX - cornerZ;
-            
+
             if (Mathf.Abs(wallShortenedLeftX - expectedWallLength) > 0.01f ||
                 Mathf.Abs(wallShortenedRightX - expectedWallLength) > 0.01f)
             {
@@ -237,7 +241,7 @@ namespace UnityLevelEditor.RoomSpawning
                 message = $"X size of wall shortened on both sides ({wallShortenedBothSidesX:F}) needs to be the same as full wall minus twice the length of the corner ({expectedWallLength:F})";
                 return false;
             }
-            
+
             message = null;
             return true;
         }
@@ -253,28 +257,23 @@ namespace UnityLevelEditor.RoomSpawning
             message = null;
             return true;
         }
-        
-        private (int numberOfWalls, float roomSize) CalculateNumberOfWallsAndRoomSize(float desiredRoomSize, float wallSize, float minRoomSize)
-        {
-            var numberOfWalls = Mathf.FloorToInt((desiredRoomSize - minRoomSize) / wallSize);
-            var actualRoomSize = minRoomSize + (numberOfWalls * wallSize);
-            
-            return (++numberOfWalls, actualRoomSize);
-        }
-        
+
         #endregion
+
         #endregion
-        
+
         #region Room Creation
+
         #region Element Spawning
+
         private void SpawnNewRoom(SpawnInfo spawnInfo, Dictionary<RoomElementType, Bounds> boundsByType)
         {
             var elementSpawnerByType = GetElementSpawnerByType(boundsByType);
-            
+
             var roomElements = new RoomElement[spawnInfo.NumberOfWalls.x + 2, spawnInfo.NumberOfWalls.y + 2];
 
             var room = new GameObject(roomName);
-            
+
             var extendableRoom = room.AddComponent<ExtendableRoom>();
             extendableRoom.SetElementSpawner(elementSpawnerByType);
             extendableRoom.FloorGridDictionary = new FloorGridDictionary();
@@ -289,7 +288,6 @@ namespace UnityLevelEditor.RoomSpawning
             SpawnRoomCenter(spawnInfo, wallSpawner, floorSpawner, roomElements, extendableRoom);
             SpawnFrontOrBackOfRoom(spawnInfo, wallSpawner, cornerSpawner, roomElements, extendableRoom, true);
 
-   
 
             Undo.RegisterCreatedObjectUndo(room, "Room Creation");
             Undo.SetCurrentGroupName("Room Creation");
@@ -307,7 +305,7 @@ namespace UnityLevelEditor.RoomSpawning
 
             return dict;
         }
-        
+
         private void SpawnFrontOrBackOfRoom(SpawnInfo spawnInfo, ElementSpawner wallSpawner, ElementSpawner cornerSpawner, RoomElement[,] roomElements, ExtendableRoom parent, bool isBackWall)
         {
             Vector3 currentSpawnPos;
@@ -339,7 +337,7 @@ namespace UnityLevelEditor.RoomSpawning
                 currentSpawnPos = cornerSpawner.ConvertLeftBottomFrontPositionToLeftBottomCenterPosition(currentSpawnPos, wallOrientation);
             }
 
-            (newRoomElement, spawnedElementSize) = cornerSpawner.SpawnByLeftBottomCenter(currentSpawnPos, firstCornerOrientation, parent, $"({indices.x}, {indices.y})");
+            (newRoomElement, spawnedElementSize) = cornerSpawner.SpawnByLeftBottomCenter(currentSpawnPos, firstCornerOrientation, parent);
             currentSpawnPos.x += spawnedElementSize.x;
             roomElements[indices.x, indices.y] = newRoomElement;
 
@@ -353,7 +351,7 @@ namespace UnityLevelEditor.RoomSpawning
 
             for (; indices.x < roomElements.GetLength(0) - 1; indices.x++)
             {
-                (newRoomElement, spawnedElementSize) = wallSpawner.SpawnByLeftBottomCenter(currentSpawnPos, wallOrientation, parent, $"({indices.x}, {indices.y})");
+                (newRoomElement, spawnedElementSize) = wallSpawner.SpawnByLeftBottomCenter(currentSpawnPos, wallOrientation, parent);
                 currentSpawnPos.x += spawnedElementSize.x;
                 roomElements[indices.x, indices.y] = newRoomElement;
 
@@ -368,7 +366,7 @@ namespace UnityLevelEditor.RoomSpawning
                 }
             }
 
-            (newRoomElement, _) = cornerSpawner.SpawnByLeftBottomCenter(currentSpawnPos, secondCornerOrientation, parent, $"({indices.x}, {indices.y})");
+            (newRoomElement, _) = cornerSpawner.SpawnByLeftBottomCenter(currentSpawnPos, secondCornerOrientation, parent);
             roomElements[indices.x, indices.y] = newRoomElement;
 
             if (isBackWall)
@@ -386,16 +384,16 @@ namespace UnityLevelEditor.RoomSpawning
         {
             RoomElement newRoomElement;
             Vector3 spawnedElementSize;
-            Vector3 currentSpawnPos = spawnInfo.RoomBounds.min;
+            var currentSpawnPos = spawnInfo.RoomBounds.min;
             currentSpawnPos.z += spawnInfo.RoomBounds.size.z - wallSpawner.Bounds.size.z;
             currentSpawnPos = wallSpawner.ConvertLeftBottomFrontPositionToLeftBottomCenterPosition(currentSpawnPos, SpawnOrientation.Left);
             // -2 for y index because last row was already spawned
-            Vector2Int indices = new Vector2Int(0, roomElements.GetLength(1)-2);
-            Vector2Int floorOffset = new Vector2Int(1, 1);
+            var indices = new Vector2Int(0, roomElements.GetLength(1) - 2);
+            var floorOffset = new Vector2Int(1, 1);
 
             for (; indices.y >= 1; indices.y--)
             {
-                (newRoomElement, spawnedElementSize) = wallSpawner.SpawnByLeftBottomCenter(currentSpawnPos, SpawnOrientation.Left, parent, $"({indices.x}, {indices.y})");
+                (newRoomElement, spawnedElementSize) = wallSpawner.SpawnByLeftBottomCenter(currentSpawnPos, SpawnOrientation.Left, parent);
 
                 currentSpawnPos.x += spawnedElementSize.x;
                 roomElements[indices.x, indices.y] = newRoomElement;
@@ -406,13 +404,13 @@ namespace UnityLevelEditor.RoomSpawning
                 {
                     newRoomElement.SetWallSideMaterial(MaterialSlotType.Left);
                 }
-                
+
                 indices.x++;
 
                 for (; indices.x < roomElements.GetLength(0) - 1; indices.x++)
                 {
-                    (newRoomElement, spawnedElementSize) = floorSpawner.SpawnByLeftBottomCenter(currentSpawnPos, SpawnOrientation.Front, parent, $"({indices.x}, {indices.y})");
-                    FloorElement floorElement = newRoomElement as FloorElement;
+                    (newRoomElement, spawnedElementSize) = floorSpawner.SpawnByLeftBottomCenter(currentSpawnPos, SpawnOrientation.Front, parent);
+                    var floorElement = newRoomElement as FloorElement;
                     var gridPosition = indices - floorOffset;
                     // ReSharper disable once PossibleNullReferenceException - we always spawn floor here
                     floorElement.GridPosition = gridPosition;
@@ -422,27 +420,26 @@ namespace UnityLevelEditor.RoomSpawning
                     ConnectFrontAndLeftElement(newRoomElement, roomElements, indices);
                 }
 
-                (newRoomElement, spawnedElementSize) = wallSpawner.SpawnByLeftBottomCenter(currentSpawnPos, SpawnOrientation.Right, parent, $"({indices.x}, {indices.y})");
+                (newRoomElement, spawnedElementSize) = wallSpawner.SpawnByLeftBottomCenter(currentSpawnPos, SpawnOrientation.Right, parent);
                 currentSpawnPos.x += spawnedElementSize.x;
                 roomElements[indices.x, indices.y] = newRoomElement;
                 ConnectFrontAndLeftElement(newRoomElement, roomElements, indices);
                 indices.x = 0;
                 currentSpawnPos.x = spawnInfo.RoomBounds.min.x;
                 currentSpawnPos.z -= spawnedElementSize.z;
-                
+
                 // Wall that's in first row on the right
                 if (indices.y == 1)
                 {
                     newRoomElement.SetWallSideMaterial(MaterialSlotType.Right);
                 }
-
             }
         }
 
         private class SpawnInfo
         {
-            public Bounds RoomBounds { get;}
-            public Vector2Int NumberOfWalls { get;}
+            public Bounds RoomBounds { get; }
+            public Vector2Int NumberOfWalls { get; }
 
             public SpawnInfo(Vector3 center, Vector3 size, Vector2Int numberOfWalls)
             {
@@ -450,26 +447,29 @@ namespace UnityLevelEditor.RoomSpawning
                 NumberOfWalls = numberOfWalls;
             }
         }
+
         #endregion
-        
+
         #region Connecting RoomElement References
-        private void ConnectFrontAndLeftElement(RoomElement newElement, RoomElement[,] roomElements, Vector2Int indices)
+
+        private static void ConnectFrontAndLeftElement(RoomElement newElement, RoomElement[,] roomElements, Vector2Int indices)
         {
             ConnectLeftElement(newElement, roomElements, indices);
             ConnectFrontElement(newElement, roomElements, indices);
         }
 
-        private void ConnectFrontElement(RoomElement newElement, RoomElement[,] roomElements, Vector2Int indices)
+        private static void ConnectFrontElement(RoomElement newElement, RoomElement[,] roomElements, Vector2Int indices)
         {
-            newElement.ConnectFrontElement(roomElements[ indices.x, indices.y + 1]);
+            newElement.ConnectFrontElement(roomElements[indices.x, indices.y + 1]);
         }
 
-        private void ConnectLeftElement(RoomElement newElement, RoomElement[,] roomElements, Vector2Int indices)
+        private static void ConnectLeftElement(RoomElement newElement, RoomElement[,] roomElements, Vector2Int indices)
         {
             newElement.ConnectLeftElement(roomElements[indices.x - 1, indices.y]);
         }
+
         #endregion
+
         #endregion
-        
     }
 }

@@ -13,9 +13,26 @@ public static class DirectionExtensions
 {
     private static readonly int DirectionEnumLength = Enum.GetValues(typeof(Direction)).Length;
 
+    public static SpawnOrientation ToSpawnOrientation(this Direction direction)
+    {
+        switch (direction)
+        {
+            case Direction.Front:
+                return SpawnOrientation.Front;
+            case Direction.Right:
+                return SpawnOrientation.Right;
+            case Direction.Back:
+                return SpawnOrientation.Back;
+            case Direction.Left:
+                return SpawnOrientation.Left;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(direction), direction, $"Converting '{direction}' to SpawnOrientation is not supported.");
+        }
+    }
+
     public static Direction Shift(this Direction direction, int shiftBy)
     {
-        int index = (int) direction;
+        var index = (int) direction;
 
         index += shiftBy;
         index %= DirectionEnumLength;
@@ -26,6 +43,21 @@ public static class DirectionExtensions
         }
 
         return (Direction) index;
+    }
+
+    public static Direction Shift(this Direction direction, bool clockwise)
+    {
+        return clockwise ? direction.Shift(1) : direction.Shift(-1);
+    }
+
+    public static bool IsSideways(this Direction direction)
+    {
+        return direction == Direction.Left || direction == Direction.Right;
+    }
+
+    public static bool TowardsNegative(this Direction direction)
+    {
+        return direction == Direction.Left || direction == Direction.Back;
     }
 
     public static Direction Opposite(this Direction direction)
@@ -41,49 +73,7 @@ public static class DirectionExtensions
             case Direction.Right:
                 return Direction.Left;
             default:
-                throw new ArgumentOutOfRangeException(nameof(direction), direction, $"Direction {direction} not supported.");
+                throw new ArgumentOutOfRangeException(nameof(direction), direction, $"Getting opposite for Direction '{direction}' is not supported.");
         }
     }
-
-    public static int GetDifference(this Direction direction, Direction otherDirection)
-    {
-        var diff = ((int) direction) - ((int) otherDirection);
-
-        if (diff < 0)
-        {
-            diff += DirectionEnumLength;
-            diff = -diff;
-        }
-
-        return diff;
-    }
-
-
-    public static bool TowardsNegative(this Direction direction)
-    {
-        return direction == Direction.Left || direction == Direction.Back;
-    }
-
-    public static bool IsSideways(this Direction direction)
-    {
-        return direction == Direction.Left || direction == Direction.Right;
-    }
-
-    public static SpawnOrientation ToSpawnOrientation(this Direction direction)
-    {
-        switch (direction)
-        {
-            case Direction.Front:
-                return SpawnOrientation.Front;
-            case Direction.Right:
-                return SpawnOrientation.Right;
-            case Direction.Back:
-                return SpawnOrientation.Back;
-            case Direction.Left:
-                return SpawnOrientation.Left;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(direction), direction, $"Direction {direction} not supported.");
-        }
-    }
-    
 }

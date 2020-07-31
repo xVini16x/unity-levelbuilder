@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace UnityLevelEditor.RoomExtension
 {
-
     public class MaterialSlotMapper : MonoBehaviour
     {
         [SerializeField] private int frontMaterialIndex;

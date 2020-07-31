@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
 using UnityLevelEditor.Model;
@@ -13,9 +14,9 @@ namespace UnityLevelEditor.RoomExtension
     {
         #region Inspector Fields
 
-        [SerializeField] private Texture2D toolIcon;
+        [SerializeField] [UsedImplicitly] private Texture2D toolIcon;
 
-        [SerializeField] private Texture2D toolIconActive;
+        [SerializeField] [UsedImplicitly] private Texture2D toolIconActive;
 
         [SerializeField] private string text = "Room Extension Tool";
 
@@ -41,7 +42,7 @@ namespace UnityLevelEditor.RoomExtension
 
         private void ChangeIcon()
         {
-            Texture2D icon = EditorTools.IsActiveTool(this) ? toolIconActive : toolIcon;
+            var icon = EditorTools.IsActiveTool(this) ? toolIconActive : toolIcon;
 
             iconContent = new GUIContent()
             {
@@ -76,7 +77,7 @@ namespace UnityLevelEditor.RoomExtension
 
             EditorGUI.BeginChangeCheck();
 
-            Vector3 position = Tools.handlePosition;
+            var position = Tools.handlePosition;
             var representativeWall = selectedWalls[0];
 
 
@@ -100,7 +101,7 @@ namespace UnityLevelEditor.RoomExtension
             {
                 var snapValue = representativeWall.ExtendableRoom.ElementSpawner[(int) RoomElementType.Floor].Bounds.size.x;
                 var movementDelta = SnapVectorXZ(position, Tools.handlePosition, snapValue);
-                
+
                 if (representativeWall.SpawnOrientation.IsSideways())
                 {
                     movementDelta.z = 0;
@@ -114,12 +115,12 @@ namespace UnityLevelEditor.RoomExtension
                 {
                     return;
                 }
-                
+
                 if (Mathf.Abs(movementDelta.x) < 0.01f && Mathf.Abs(movementDelta.z) < 0.01f)
                 {
                     return;
                 }
-                
+
                 RoomExtension.ExtendTheRoom(selectedWalls, movementDelta);
             }
         }
@@ -132,22 +133,22 @@ namespace UnityLevelEditor.RoomExtension
                     Handles.ArrowHandleCap, 1f);
             }
         }
-        
+
         private static Vector3 SnapVectorXZ(Vector3 newPosition, Vector3 oldPosition, float snapValue)
         {
             var vector = newPosition - oldPosition;
-            
+
             var snapValueFactorX = Mathf.Clamp(Mathf.Round(vector.x / snapValue), -1, 1);
-            vector.x =  snapValueFactorX * snapValue;
-            
+            vector.x = snapValueFactorX * snapValue;
+
             var snapValueFactorZ = Mathf.Clamp(Mathf.Round(vector.z / snapValue), -1, 1);
             vector.z = snapValueFactorZ * snapValue;
-            
+
             return vector;
         }
 
         #endregion
-      
+
         #region SelectionHandling
 
         private bool TryGetSelectedWallsAndUpdateSelection(out List<RoomElement> selectedWalls)
@@ -213,14 +214,12 @@ namespace UnityLevelEditor.RoomExtension
             SpawnOrientation orientation)
         {
             return Selection.transforms.Select(t => t.GetComponent<RoomElement>())
-                .Where(r => r != null 
-                            && ((type.IsWallType() && r.Type.IsWallType()) || (type.IsCornerType() && r.Type.IsCornerType()) || r.Type == type) 
+                .Where(r => r != null
+                            && ((type.IsWallType() && r.Type.IsWallType()) || (type.IsCornerType() && r.Type.IsCornerType()) || r.Type == type)
                             && r.SpawnOrientation == orientation)
                 .ToList();
         }
 
         #endregion
-
-       
     }
 }

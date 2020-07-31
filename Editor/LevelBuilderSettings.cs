@@ -1,40 +1,36 @@
 ﻿using System.IO;
+using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
 
-class LevelBuilderSettings : ScriptableObject
+internal class LevelBuilderSettings : ScriptableObject
 {
-    public const string MyCustomSettingsPath = "Assets/Editor/LevelBuilderSettings.asset";
+    private const string MyCustomSettingsPath = "Assets/Editor/LevelBuilderSettings.asset";
     private const string FolderPath = "Assets/Editor";
 
-    [SerializeField] private GameObject fullWall;
-    [SerializeField] private GameObject wallShortenedLeft;
-    [SerializeField] private GameObject wallShortenedRight;
-    [SerializeField] private GameObject wallShortenedBothSides;
-    [SerializeField] private GameObject floor;
-    [SerializeField] private GameObject corner;
-    [SerializeField] private Material transparentMaterial;
-    [SerializeField] private Material wallSideMaterial;
-    [SerializeField] private string roomName;
-    [SerializeField] private Vector2 roomSize;
-
+#pragma warning disable CS0414
+    [SerializeField] [UsedImplicitly] private GameObject fullWall;
+    [SerializeField] [UsedImplicitly] private GameObject wallShortenedLeft;
+    [SerializeField] [UsedImplicitly] private GameObject wallShortenedRight;
+    [SerializeField] [UsedImplicitly] private GameObject wallShortenedBothSides;
+    [SerializeField] [UsedImplicitly] private GameObject floor;
+    [SerializeField] [UsedImplicitly] private GameObject corner;
+    [SerializeField] [UsedImplicitly] private Material transparentMaterial;
+    [SerializeField] [UsedImplicitly] private Material wallSideMaterial;
+    [SerializeField] [UsedImplicitly] private string roomName;
+    [SerializeField] [UsedImplicitly] private Vector2Int roomSize;
+#pragma warning restore CS0414
+    
     internal static LevelBuilderSettings GetOrCreateSettings()
     {
         var settings = AssetDatabase.LoadAssetAtPath<LevelBuilderSettings>(MyCustomSettingsPath);
+        
         if (settings == null)
         {
-            settings = ScriptableObject.CreateInstance<LevelBuilderSettings>();
+            settings = CreateInstance<LevelBuilderSettings>();
             //default values
-            settings.fullWall = null;
-            settings.wallShortenedLeft = null;
-            settings.wallShortenedRight = null;
-            settings.wallShortenedBothSides = null;
-            settings.floor = null;
-            settings.corner = null;
-            settings.transparentMaterial = null;
-            settings.wallSideMaterial = null;
             settings.roomName = "StandardRoom";
-            settings.roomSize = new Vector2(1, 1);
+            settings.roomSize = new Vector2Int(1, 1);
 
             if (!Directory.Exists(FolderPath))
             {
@@ -54,7 +50,7 @@ class LevelBuilderSettings : ScriptableObject
     }
 }
 
-class AssetSettingsProviderRegister
+internal static class AssetSettingsProviderRegister
 {
     private const string ProviderPath = "Project/LevelBuilderSettings";
 

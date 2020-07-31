@@ -1,28 +1,29 @@
-﻿namespace UnityLevelEditor.Model {
-
-public static class FloorGridExtension 
+﻿namespace UnityLevelEditor.Model
 {
-    public static (FloorElement clockwiseDiagonalFloor, FloorElement counterClockwiseDiagonalFloor) GetDiagonalCollision(this FloorGridDictionary floorGridDictionary, FloorElement floorElement, Direction wallDirection)
+    public static class FloorGridExtension
     {
-        var gridPos = RoomExtension.RoomExtension.GetGridPosition(floorElement.GridPosition, wallDirection);
-
-        var clockwiseDirection = RoomExtension.RoomExtension.GetGridPosition(gridPos, wallDirection.Shift(1));
-        var counterClockwiseDirection = RoomExtension.RoomExtension.GetGridPosition(gridPos, wallDirection.Shift(-1));
-
-        FloorElement clockwise = null;
-        FloorElement counterClockwise = null;
-
-        if (floorGridDictionary.ContainsKey(clockwiseDirection))
+        //As an Extension method to have it in the Editor folder because of it's Editor dependencies
+        public static (FloorElement clockwiseDiagonalFloor, FloorElement counterClockwiseDiagonalFloor) GetDiagonalCollision(this FloorGridDictionary floorGridDictionary, FloorElement floorElement, Direction wallDirection)
         {
-            clockwise = floorGridDictionary[clockwiseDirection];
-        }
+            var gridPos = RoomExtension.RoomExtension.GetGridPosition(floorElement.GridPosition, wallDirection);
 
-        if (floorGridDictionary.ContainsKey(counterClockwiseDirection))
-        {
-            counterClockwise = floorGridDictionary[counterClockwiseDirection];
-        }
+            var clockwiseDirection = RoomExtension.RoomExtension.GetGridPosition(gridPos, wallDirection.Shift(1));
+            var counterClockwiseDirection = RoomExtension.RoomExtension.GetGridPosition(gridPos, wallDirection.Shift(-1));
 
-        return (clockwise, counterClockwise);
-    }
+            FloorElement clockwise = null;
+            FloorElement counterClockwise = null;
+
+            if (floorGridDictionary.ContainsKey(clockwiseDirection))
+            {
+                clockwise = floorGridDictionary[clockwiseDirection];
+            }
+
+            if (floorGridDictionary.ContainsKey(counterClockwiseDirection))
+            {
+                counterClockwise = floorGridDictionary[counterClockwiseDirection];
+            }
+
+            return (clockwise, counterClockwise);
+        }
     }
 }

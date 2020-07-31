@@ -25,7 +25,7 @@ namespace UnityLevelEditor.Model
                 case SpawnOrientation.Back: return 180f;
                 case SpawnOrientation.Left: return 270f;
                 default:
-                    Debug.LogError($"Not supported SpawnOrientation {spawnOrientation}.");
+                    Debug.LogError($"Converting SpawnOrientation '{spawnOrientation}' to angle is not supported.");
                     return 0f;
             }
         }
@@ -43,7 +43,7 @@ namespace UnityLevelEditor.Model
                 case SpawnOrientation.Left:
                     return Direction.Left;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(spawnOrientation), spawnOrientation, $"Not supported SpawnOrientation {spawnOrientation}.");
+                    throw new ArgumentOutOfRangeException(nameof(spawnOrientation), spawnOrientation, $"Converting SpawnOrientation '{spawnOrientation}' to Direction is not supported.");
             }
         }
 
@@ -91,7 +91,7 @@ namespace UnityLevelEditor.Model
                 case SpawnOrientation.Right:
                     return SpawnOrientation.Left;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(SpawnOrientation), spawnOrientation, $"SpawnOrientation {spawnOrientation} not supported.");
+                    throw new ArgumentOutOfRangeException(nameof(SpawnOrientation), spawnOrientation, $"Getting opposite for SpawnOrientation '{spawnOrientation}' is not supported.");
             }
         }
     }
