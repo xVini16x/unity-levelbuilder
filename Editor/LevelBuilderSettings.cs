@@ -56,19 +56,19 @@ class LevelBuilderSettings : ScriptableObject
 
 class AssetSettingsProviderRegister
 {
-    
     private const string ProviderPath = "Project/LevelBuilderSettings";
-    
+
     [SettingsProvider]
-    public static SettingsProvider CreateFromFilePath()
+    public static SettingsProvider CreateFromSettingsObject()
     {
-        // Create an AssetSettingsProvider from a file path:
-        var provider = AssetSettingsProvider.CreateProviderFromAssetPath(ProviderPath,
-            LevelBuilderSettings.MyCustomSettingsPath);
+        // Create an AssetSettingsProvider from a settings object (UnityEngine.Object):
+        var settingsObj = LevelBuilderSettings.GetOrCreateSettings();
+
+        var provider = AssetSettingsProvider.CreateProviderFromObject(ProviderPath, settingsObj);
 
         // Register keywords from the properties of MyCustomSettings
-        provider.keywords = SettingsProvider.GetSearchKeywordsFromSerializedObject(
-            new SerializedObject(AssetDatabase.LoadAllAssetsAtPath(LevelBuilderSettings.MyCustomSettingsPath)));
+        provider.keywords = SettingsProvider.GetSearchKeywordsFromSerializedObject(new SerializedObject(settingsObj));
         return provider;
     }
+
 }
