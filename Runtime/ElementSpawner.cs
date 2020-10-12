@@ -1,11 +1,12 @@
 ﻿using System;
 using UnityEditor;
 using UnityEngine;
-using UnityLevelEditor.Model;
-using UnityLevelEditor.RoomExtension;
 
 namespace UnityLevelEditor
 {
+    using Model;
+    using RoomExtension;
+    
     [Serializable]
     public class ElementSpawner
     {

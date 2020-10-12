@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
-using UnityLevelEditor.Model;
 
-namespace UnityLevelEditor.RoomExtension
+namespace UnityLevelEditor.Editor
 {
+    using Model;
+    using UnityLevelEditor.RoomExtension;
+    
     public static class RoomExtension
     {
         #region Extension Based On Wall Type (Entry Point)

@@ -3,12 +3,13 @@ using System.Linq;
 using JetBrains.Annotations;
 using UnityEditor;
 using UnityEngine;
-using UnityLevelEditor.Model;
 using UnityEditor.EditorTools;
 using Object = UnityEngine.Object;
 
-namespace UnityLevelEditor.RoomExtension
+namespace UnityLevelEditor.Editor
 {
+    using Model;
+    
     [EditorTool("RoomExtension")]
     public class RoomHandles : EditorTool
     {

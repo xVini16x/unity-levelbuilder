@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityLevelEditor.Model;
 
 namespace UnityLevelEditor.RoomExtension
 {
+    using Model;
     public class ExtendableRoom : MonoBehaviour
     {
         [field: SerializeField, HideInInspector]
