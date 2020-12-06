@@ -198,7 +198,8 @@ namespace UnityLevelEditor.Model
         #endregion
 
         #region Material Handling
-
+        
+        #if UNITY_EDITOR
         public void SetAllMaterialsTransparent()
         {
             var material = ExtendableRoom.TransparentMaterial;
@@ -241,7 +242,8 @@ namespace UnityLevelEditor.Model
             materials[MaterialSlotMapper.GetMaterialSlotIndex(MaterialSlotType.Top)] = copySourceMaterials[copySource.MaterialSlotMapper.GetMaterialSlotIndex(MaterialSlotType.Top)];
             MeshRenderer.sharedMaterials = materials;
         }
-
+#endif
+        
         #endregion
     }
 }
