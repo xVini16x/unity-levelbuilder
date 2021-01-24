@@ -240,7 +240,7 @@ namespace UnityLevelEditor.RoomExtension
                 wallToEnlarge.ExtendableRoom);
             Undo.RegisterCreatedObjectUndo(newWall.gameObject, "");
             newWall.CopyNeighbors(wallToEnlarge);
-            newWall.CopySideAndTopMaterials(wallToEnlarge);
+            newWall.CopySideBackAndTopMaterials(wallToEnlarge);
 
             if (Selection.Contains(wallToEnlarge.gameObject))
             {
@@ -290,7 +290,7 @@ namespace UnityLevelEditor.RoomExtension
 
             //connection handling
             shrunkWall.CopyNeighbors(wallToShrink);
-            shrunkWall.CopySideAndTopMaterials(wallToShrink);
+            shrunkWall.CopySideBackAndTopMaterials(wallToShrink);
 
             RoomElement corner = null;
 
@@ -511,6 +511,7 @@ namespace UnityLevelEditor.RoomExtension
 
                 if (spawnOrientation == SpawnOrientation.Back)
                 {
+                    newWall.SetTransparentMaterial(MaterialSlotType.Back);
                     newWall.SetTransparentMaterial(MaterialSlotType.Top);
                 }
 
@@ -560,6 +561,7 @@ namespace UnityLevelEditor.RoomExtension
                 if (spawnOrientation == SpawnOrientation.Back)
                 {
                     newWall.SetTransparentMaterial(MaterialSlotType.Top);
+                    newWall.SetTransparentMaterial(MaterialSlotType.Back);
                 }
 
 
@@ -803,6 +805,7 @@ namespace UnityLevelEditor.RoomExtension
                 if (selectedWall.SpawnOrientation == SpawnOrientation.Back)
                 {
                     selectedWall.SetTransparentMaterial(MaterialSlotType.Top);
+                    selectedWall.SetTransparentMaterial(MaterialSlotType.Back);
                 }
 
                 return;
@@ -854,6 +857,7 @@ namespace UnityLevelEditor.RoomExtension
             if (spawnOrientation == SpawnOrientation.Back)
             {
                 newWall.SetTransparentMaterial(MaterialSlotType.Top);
+                newWall.SetTransparentMaterial(MaterialSlotType.Back);
             }
 
             return newWall;

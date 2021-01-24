@@ -232,7 +232,7 @@ namespace UnityLevelEditor.Model
             MeshRenderer.sharedMaterials = materials;
         }
 
-        public void CopySideAndTopMaterials(RoomElement copySource)
+        public void CopySideBackAndTopMaterials(RoomElement copySource)
         {
             var materials = MeshRenderer.sharedMaterials;
             Undo.RecordObject(MeshRenderer, "");
@@ -240,6 +240,8 @@ namespace UnityLevelEditor.Model
             materials[MaterialSlotMapper.GetMaterialSlotIndex(MaterialSlotType.Left)] = copySourceMaterials[copySource.MaterialSlotMapper.GetMaterialSlotIndex(MaterialSlotType.Left)];
             materials[MaterialSlotMapper.GetMaterialSlotIndex(MaterialSlotType.Right)] = copySourceMaterials[copySource.MaterialSlotMapper.GetMaterialSlotIndex(MaterialSlotType.Right)];
             materials[MaterialSlotMapper.GetMaterialSlotIndex(MaterialSlotType.Top)] = copySourceMaterials[copySource.MaterialSlotMapper.GetMaterialSlotIndex(MaterialSlotType.Top)];
+            materials[MaterialSlotMapper.GetMaterialSlotIndex(MaterialSlotType.Back)] =
+                copySourceMaterials[copySource.MaterialSlotMapper.GetMaterialSlotIndex(MaterialSlotType.Back)];
             MeshRenderer.sharedMaterials = materials;
         }
 #endif

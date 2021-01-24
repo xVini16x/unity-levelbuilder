@@ -360,6 +360,7 @@ namespace UnityLevelEditor.RoomSpawning
                 if (isBackWall)
                 {
                     newRoomElement.SetTransparentMaterial(MaterialSlotType.Top);
+                    newRoomElement.SetTransparentMaterial(MaterialSlotType.Back);
                     ConnectFrontAndLeftElement(newRoomElement, roomElements, indices);
                 }
                 else
