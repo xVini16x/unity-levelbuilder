@@ -242,7 +242,7 @@ namespace UnityLevelEditor.Editor
                 wallToEnlarge.ExtendableRoom);
             Undo.RegisterCreatedObjectUndo(newWall.gameObject, "");
             newWall.CopyNeighbors(wallToEnlarge);
-            newWall.CopySideAndTopMaterials(wallToEnlarge);
+            newWall.CopySideBackAndTopMaterials(wallToEnlarge);
 
             if (Selection.Contains(wallToEnlarge.gameObject))
             {
@@ -292,7 +292,7 @@ namespace UnityLevelEditor.Editor
 
             //connection handling
             shrunkWall.CopyNeighbors(wallToShrink);
-            shrunkWall.CopySideAndTopMaterials(wallToShrink);
+            shrunkWall.CopySideBackAndTopMaterials(wallToShrink);
 
             RoomElement corner = null;
 
@@ -513,6 +513,7 @@ namespace UnityLevelEditor.Editor
 
                 if (spawnOrientation == SpawnOrientation.Back)
                 {
+                    newWall.SetTransparentMaterial(MaterialSlotType.Back);
                     newWall.SetTransparentMaterial(MaterialSlotType.Top);
                 }
 
@@ -562,6 +563,7 @@ namespace UnityLevelEditor.Editor
                 if (spawnOrientation == SpawnOrientation.Back)
                 {
                     newWall.SetTransparentMaterial(MaterialSlotType.Top);
+                    newWall.SetTransparentMaterial(MaterialSlotType.Back);
                 }
 
 
@@ -805,6 +807,7 @@ namespace UnityLevelEditor.Editor
                 if (selectedWall.SpawnOrientation == SpawnOrientation.Back)
                 {
                     selectedWall.SetTransparentMaterial(MaterialSlotType.Top);
+                    selectedWall.SetTransparentMaterial(MaterialSlotType.Back);
                 }
 
                 return;
@@ -856,6 +859,7 @@ namespace UnityLevelEditor.Editor
             if (spawnOrientation == SpawnOrientation.Back)
             {
                 newWall.SetTransparentMaterial(MaterialSlotType.Top);
+                newWall.SetTransparentMaterial(MaterialSlotType.Back);
             }
 
             return newWall;

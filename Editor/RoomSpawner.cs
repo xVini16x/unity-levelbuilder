@@ -140,7 +140,9 @@ namespace UnityLevelEditor.RoomSpawning
 
             if (GUILayout.Button("Create Room"))
             {
-                var spawnInfo = new SpawnInfo(Vector3.zero, roomSize3D, roomSize);
+                var roomCenter = Vector3.zero;
+                roomCenter.y = fullWallBounds.extents.y - boundsByType[RoomElementType.Floor].size.y;
+                var spawnInfo = new SpawnInfo(roomCenter, roomSize3D, roomSize);
                 SpawnNewRoom(spawnInfo, boundsByType);
             }
         }
@@ -396,6 +398,7 @@ namespace UnityLevelEditor.RoomSpawning
                 if (isBackWall)
                 {
                     newRoomElement.SetTransparentMaterial(MaterialSlotType.Top);
+                    newRoomElement.SetTransparentMaterial(MaterialSlotType.Back);
                     ConnectFrontAndLeftElement(newRoomElement, roomElements, indices);
                 }
                 else
