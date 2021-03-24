@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+
 using UnityEngine;
+using UnityLevelEditor.RoomExtension;
 
 namespace UnityLevelEditor.Model
 {
@@ -43,5 +45,39 @@ namespace UnityLevelEditor.Model
     [Serializable]
     public class FloorGridDictionary : SerializableDictionary<Vector2Int, FloorElement>
     {
+    }
+    
+    [Serializable]
+    public class MaterialSlotsDictionary : SerializableDictionary<MaterialSlotType, int>
+    {
+    }
+
+    [Serializable]
+    public class MaterialSlotMappingsPerMesh : SerializableDictionary<Mesh, MaterialSlotsDictionary>
+    {
+        
+    }
+
+    [Serializable]
+    public class MaterialSelectionDictionary : SerializableDictionary<MaterialSlotType, List<Material>>
+    {
+    }
+
+    [Serializable]
+    public class PrefabsPerSide : SerializableDictionary<RoomSide, RoomElementSpawnSettings>
+    {
+       
+    }
+    
+    [Serializable]
+    public class WallsPerDirection : SerializableDictionary<Direction, WallElement>
+    {
+       
+    }
+    
+    [Serializable]
+    public class CornerPerDirection : SerializableDictionary<Direction4Diagonal, CornerElement>
+    {
+       
     }
 }

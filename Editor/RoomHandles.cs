@@ -1,18 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using JetBrains.Annotations;
-using UnityEditor;
-using UnityEngine;
-using UnityEditor.EditorTools;
-using Object = UnityEngine.Object;
+﻿using UnityEditor.EditorTools;
 
 namespace UnityLevelEditor.Editor
 {
-    using Model;
-    
+
     [EditorTool("RoomExtension")]
     public class RoomHandles : EditorTool
     {
+        /*
         #region Inspector Fields
 
         [SerializeField] [UsedImplicitly] private Texture2D toolIcon;
@@ -100,7 +94,7 @@ namespace UnityLevelEditor.Editor
 
             if (EditorGUI.EndChangeCheck())
             {
-                var snapValue = representativeWall.ExtendableRoom.ElementSpawner[(int) RoomElementType.Floor].Bounds.size.x;
+                var snapValue = representativeWall.ExtendableRoomO.ElementSpawner[(int) RoomElementType.Floor].Bounds.size.x;
                 var movementDelta = SnapVectorXZ(position, Tools.handlePosition, snapValue);
 
                 if (representativeWall.SpawnOrientation.IsSideways())
@@ -222,5 +216,6 @@ namespace UnityLevelEditor.Editor
         }
 
         #endregion
+        */
     }
-}
+} 

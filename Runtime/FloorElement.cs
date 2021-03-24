@@ -1,10 +1,39 @@
-﻿using UnityEngine;
+﻿using UnityEditor;
 
-namespace UnityLevelEditor.Model
+using UnityEngine;
+using UnityLevelEditor.Model;
+using UnityLevelEditor.RoomExtension;
+
+public class FloorElement : MonoBehaviour
 {
-    public class FloorElement : RoomElement
+    [field: SerializeField, HideInInspector]
+    public ExtendableRoom ExtendableRoom { get; set; }
+    
+    [field: SerializeField, HideInInspector]
+    public Vector2Int GridPosition { get; set; }
+
+    [field: SerializeField, HideInInspector]
+    public WallsPerDirection WallsPerDirection { get; } = new WallsPerDirection();
+    
+    [field: SerializeField, HideInInspector]
+    public CornerPerDirection CornerPerDirection { get; } = new CornerPerDirection();
+
+    #if UNITY_EDITOR
+    public void DeleteAllNeighbors()
     {
-        [field: SerializeField, HideInInspector]
-        public Vector2Int GridPosition { get; set; }
+        foreach (var direction in WallsPerDirection.Keys)
+        {
+            Undo.DestroyObjectImmediate(WallsPerDirection[direction].gameObject);
+        }
+
+        WallsPerDirection.Clear();
+        
+        foreach (var diagonalDirection in CornerPerDirection.Keys)
+        {
+            Undo.DestroyObjectImmediate(CornerPerDirection[diagonalDirection].gameObject);
+        }
+        
+        CornerPerDirection.Clear();
     }
+    #endif
 }
