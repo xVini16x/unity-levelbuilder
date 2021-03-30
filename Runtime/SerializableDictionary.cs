@@ -22,7 +22,7 @@ namespace UnityLevelEditor.Model
             {
                 keys.Add(pair.Key);
                 values.Add(pair.Value);
-            }
+            } 
         }
 
         // load dictionary from lists
@@ -40,6 +40,7 @@ namespace UnityLevelEditor.Model
                 this.Add(keys[i], values[i]);
             }
         }
+        
     }
 
     [Serializable]
@@ -72,7 +73,7 @@ namespace UnityLevelEditor.Model
     [Serializable]
     public class WallsPerDirection : SerializableDictionary<Direction, WallElement>
     {
-       
+        
     }
     
     [Serializable]

@@ -1,4 +1,14 @@
-﻿using UnityEditor.EditorTools;
+﻿using System.Collections.Generic;
+using System.Linq;
+
+using JetBrains.Annotations;
+
+using UnityEditor;
+using UnityEditor.EditorTools;
+
+using UnityEngine;
+
+using UnityLevelEditor.Model;
 
 namespace UnityLevelEditor.Editor
 {
@@ -6,7 +16,6 @@ namespace UnityLevelEditor.Editor
     [EditorTool("RoomExtension")]
     public class RoomHandles : EditorTool
     {
-        /*
         #region Inspector Fields
 
         [SerializeField] [UsedImplicitly] private Texture2D toolIcon;
@@ -58,7 +67,7 @@ namespace UnityLevelEditor.Editor
                 return false;
             }
 
-            var roomElement = t.GetComponent<RoomElement>();
+            var roomElement = t.GetComponent<WallElement>();
             return (roomElement != null && roomElement.Type.IsWallType());
         }
 
@@ -76,28 +85,28 @@ namespace UnityLevelEditor.Editor
             var representativeWall = selectedWalls[0];
 
 
-            switch (representativeWall.SpawnOrientation)
+            switch (representativeWall.Direction)
             {
-                case SpawnOrientation.Back:
+                case Direction.Back:
                     position = DrawHandle(position, Vector3.back, Color.blue);
                     break;
-                case SpawnOrientation.Front:
+                case Direction.Front:
                     position = DrawHandle(position, Vector3.forward, Color.blue);
                     break;
-                case SpawnOrientation.Left:
+                case Direction.Left:
                     position = DrawHandle(position, Vector3.left, Color.red);
                     break;
-                case SpawnOrientation.Right:
+                case Direction.Right:
                     position = DrawHandle(position, Vector3.right, Color.red);
                     break;
             }
 
             if (EditorGUI.EndChangeCheck())
             {
-                var snapValue = representativeWall.ExtendableRoomO.ElementSpawner[(int) RoomElementType.Floor].Bounds.size.x;
+                var snapValue = representativeWall.ExtendableRoom.FloorSize;
                 var movementDelta = SnapVectorXZ(position, Tools.handlePosition, snapValue);
 
-                if (representativeWall.SpawnOrientation.IsSideways())
+                if (representativeWall.Direction.IsSideways())
                 {
                     movementDelta.z = 0;
                 }
@@ -106,7 +115,7 @@ namespace UnityLevelEditor.Editor
                     movementDelta.x = 0;
                 }
 
-                if (representativeWall.SpawnOrientation.TowardsNegative() == (movementDelta.x > 0.01f || movementDelta.z > 0.01f))
+                if (representativeWall.Direction.TowardsNegative() == (movementDelta.x > 0.01f || movementDelta.z > 0.01f))
                 {
                     return;
                 }
@@ -115,9 +124,43 @@ namespace UnityLevelEditor.Editor
                 {
                     return;
                 }
-
-                RoomExtension.ExtendTheRoom(selectedWalls, movementDelta);
+                
+                ExtendTheRoom(selectedWalls, movementDelta);
             }
+        }
+
+
+        private void ExtendTheRoom(List<WallElement> selectedWalls, Vector3 movementDelta)
+        {
+            Undo.IncrementCurrentGroup();
+            Undo.SetCurrentGroupName("Room Extension");
+            var undoGroupId = Undo.GetCurrentGroup();
+            
+            var representativeWall = selectedWalls[0];
+            var extendableRoom = representativeWall.ExtendableRoom;
+            var direction = representativeWall.Direction;
+            var floorGridAddition = direction.AsVector2Int();
+
+            var newFloors = new List<FloorElement>();
+            //TODO use movementDelta to make multiple steps
+            
+            for (var i = 0; i < selectedWalls.Count; i++)
+            {
+                var newFloorTilePosition = selectedWalls[i].FloorTilePosition + floorGridAddition;
+                var newFloor = extendableRoom.Spawn(newFloorTilePosition);
+                
+                newFloors.Add(newFloor);
+            }
+
+            foreach (var newFloor in newFloors)
+            {
+                if (newFloor.TryGetWall(direction, out var wallElement))
+                {
+                    AddToSelection(wallElement, false);
+                }
+            }
+
+            Undo.CollapseUndoOperations(undoGroupId);
         }
 
         private Vector3 DrawHandle(Vector3 position, Vector3 direction, Color color)
@@ -126,6 +169,20 @@ namespace UnityLevelEditor.Editor
             {
                 return Handles.Slider(position, direction, HandleUtility.GetHandleSize(position),
                     Handles.ArrowHandleCap, 1f);
+            }
+        }
+        
+        private static void AddToSelection(WallElement newSelectedElement, bool asActiveObject)
+        {
+            var oldSelection = Selection.objects;
+            var newSelection = new UnityEngine.Object[oldSelection.Length + 1];
+            oldSelection.CopyTo(newSelection, 0);
+            newSelection[newSelection.Length - 1] = newSelectedElement.gameObject;
+            Selection.objects = newSelection;
+
+            if (asActiveObject)
+            {
+                Selection.activeGameObject = newSelectedElement.gameObject;
             }
         }
 
@@ -146,7 +203,7 @@ namespace UnityLevelEditor.Editor
 
         #region SelectionHandling
 
-        private bool TryGetSelectedWallsAndUpdateSelection(out List<RoomElement> selectedWalls)
+        private bool TryGetSelectedWallsAndUpdateSelection(out List<WallElement> selectedWalls)
         {
             selectedWalls = null;
 
@@ -155,7 +212,7 @@ namespace UnityLevelEditor.Editor
                 return false;
             }
 
-            var selectedRoomElement = selectedGameObject.GetComponent<RoomElement>();
+            var selectedRoomElement = selectedGameObject.GetComponent<WallElement>();
 
             if (selectedRoomElement == null)
             {
@@ -165,7 +222,7 @@ namespace UnityLevelEditor.Editor
 
             var roomElementsOfActiveType =
                 FilterSelectionForRoomElementsOfGivenTypeAndOrientation(selectedRoomElement.Type,
-                    selectedRoomElement.SpawnOrientation);
+                    selectedRoomElement.Direction);
 
             Selection.objects =
                 roomElementsOfActiveType.Select(roomElement => roomElement.gameObject).ToArray<Object>();
@@ -201,21 +258,21 @@ namespace UnityLevelEditor.Editor
 
         private void RemoveRoomElementsFromSelection()
         {
-            Selection.objects = Selection.gameObjects.Where(go => go.GetComponent<RoomElement>() == null)
+            Selection.objects = Selection.gameObjects.Where(go => go.GetComponent<WallElement>() == null)
                 .ToArray<Object>();
         }
 
-        private List<RoomElement> FilterSelectionForRoomElementsOfGivenTypeAndOrientation(RoomElementType type,
-            SpawnOrientation orientation)
+        private List<WallElement> FilterSelectionForRoomElementsOfGivenTypeAndOrientation(RoomElementType type,
+            Direction direction)
         {
-            return Selection.transforms.Select(t => t.GetComponent<RoomElement>())
+            return Selection.transforms.Select(t => t.GetComponent<WallElement>())
                 .Where(r => r != null
                             && ((type.IsWallType() && r.Type.IsWallType()) || (type.IsCornerType() && r.Type.IsCornerType()) || r.Type == type)
-                            && r.SpawnOrientation == orientation)
+                            && r.Direction == direction)
                 .ToList();
         }
 
         #endregion
-        */
+        
     }
 } 

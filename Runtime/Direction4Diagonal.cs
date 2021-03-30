@@ -166,11 +166,11 @@ namespace UnityLevelEditor.Model
                 case Direction4Diagonal.UpRight:
                     return 0;
                 case Direction4Diagonal.DownRight:
-                    return 270;
+                    return 90;
                 case Direction4Diagonal.DownLeft:
                     return 180;
                 case Direction4Diagonal.UpLeft:
-                    return 90;
+                    return 270;
                 default:
                     throw new ArgumentOutOfRangeException(nameof(direction4Diagonal), direction4Diagonal, null);
             }
