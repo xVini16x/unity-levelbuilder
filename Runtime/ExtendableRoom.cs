@@ -13,7 +13,7 @@ namespace UnityLevelEditor.RoomExtension
 
     public class ExtendableRoom : MonoBehaviour
     {
-        [field: SerializeField, HideInInspector]
+        [field: SerializeField]
         public FloorGridDictionary FloorGridDictionary { get; set; }
 
         [field: SerializeField, HideInInspector]
@@ -47,8 +47,56 @@ namespace UnityLevelEditor.RoomExtension
 
         public FloorElement Spawn(Vector2Int floorTilePosition)
         {
-            Undo.RecordObject(this, "");
+            Undo.RegisterCompleteObjectUndo(this, "");
+
+            var neighborsToReevaluate = GetAndRecordRespawnRelevantFloors(floorTilePosition);
             
+            foreach (var neighborPosition in neighborsToReevaluate)
+            {
+                RespawnWalls(neighborPosition);
+            }
+
+            return FloorGridDictionary[floorTilePosition];
+        }
+
+        public FloorElement DeleteFloor(Vector2Int floorTilePosition, Vector2Int newFloorPosition)
+        {
+            Undo.RegisterCompleteObjectUndo(this, "");
+            
+            if (!FloorGridDictionary.TryGetValue(floorTilePosition, out var floorElement))
+            {
+                return null;
+            }
+
+            var neighborsToReevaluate = GetAndRecordRespawnRelevantFloors(floorTilePosition);
+            
+            floorElement.DeleteAllNeighbors();
+            Undo.DestroyObjectImmediate(floorElement.gameObject);
+            neighborsToReevaluate.Remove(floorTilePosition);
+            FloorGridDictionary.Remove(floorTilePosition);
+            
+            if (FloorGridDictionary.Count == 0)
+            {
+                Undo.DestroyObjectImmediate(this.gameObject);
+                return null;
+            }
+
+            foreach (var neighborPosition in neighborsToReevaluate)
+            {
+                RespawnWalls(neighborPosition);
+            }
+
+            if (FloorGridDictionary.TryGetValue(newFloorPosition, out var newFloor))
+            {
+                return newFloor;
+            }
+
+            return null;
+
+        }
+
+        private List<Vector2Int> GetAndRecordRespawnRelevantFloors(Vector2Int floorTilePosition)
+        {
             if (!FloorGridDictionary.TryGetValue(floorTilePosition, out var floorElement))
             {
                 floorElement = SpawnFloor(floorTilePosition);
@@ -56,8 +104,6 @@ namespace UnityLevelEditor.RoomExtension
             
             Undo.RegisterCompleteObjectUndo(floorElement, "");
             
-            Debug.Log("Recorded " + floorTilePosition);
-
             var neighborsToReevaluate = new List<Vector2Int>(){floorTilePosition};
 
             // Already check for neighbors to record their current state
@@ -67,7 +113,6 @@ namespace UnityLevelEditor.RoomExtension
 
                 if (FloorGridDictionary.TryGetValue(tileInDirection, out var neighbor))
                 {
-                    Debug.Log("Recorded " + neighbor.gameObject.name);
                     neighborsToReevaluate.Add(tileInDirection);
                     Undo.RegisterCompleteObjectUndo(neighbor, "");
                 }
@@ -76,18 +121,12 @@ namespace UnityLevelEditor.RoomExtension
 
                 if (FloorGridDictionary.TryGetValue(tileInDirection, out neighbor))
                 {
-                    Debug.Log("Recorded " + neighbor.gameObject.name);
                     neighborsToReevaluate.Add(tileInDirection);
                     Undo.RegisterCompleteObjectUndo(neighbor, "");
                 }
             }
-            
-            foreach (var neighborPosition in neighborsToReevaluate)
-            {
-                RespawnWalls(neighborPosition);
-            }
 
-            return FloorGridDictionary[floorTilePosition];
+            return neighborsToReevaluate;
         }
 
         private void RespawnWalls(Vector2Int floorTilePosition)

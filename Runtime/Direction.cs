@@ -133,5 +133,54 @@ namespace UnityLevelEditor.Model
                     throw new InvalidEnumArgumentException(nameof(direction), (int)direction, typeof(Direction));
             }
         }
+        
+         /// <summary>
+        /// Returns a <see cref="Direction"/> best fitting to the <b>x</b> and <b>y</b> of this <see cref="Vector3"/>.
+        /// </summary>
+        /// <param name="vector3">The input <see cref="Vector3"/>.</param>
+        /// <returns>The <see cref="Direction"/> best fitting to the <b>x</b> and <b>y</b> of <paramref name="vector3"/>.</returns>
+        public static Direction AsDirectionXY(this Vector3 vector3)
+        {
+            return GetDirection(vector3.x, vector3.y);
+        }
+
+        /// <summary>
+        /// Returns a <see cref="Direction"/> best fitting to the <b>x</b> and <b>z</b> of this <see cref="Vector3"/>.
+        /// </summary>
+        /// <remarks> Useful for handling two-dimensional calculations on a horizontal plane. </remarks>
+        /// <param name="vector3">The input <see cref="Vector3"/>.</param>
+        /// <returns>The <see cref="Direction"/> best fitting to the <b>x</b> and <b>z</b> of <paramref name="vector3"/>.</returns>
+        public static Direction AsDirectionXZ(this Vector3 vector3)
+        {
+            return GetDirection(vector3.x, vector3.z);
+        }
+
+        /// <summary>
+        /// Returns a <see cref="Direction"/> best fitting to this <see cref="Vector2"/>.
+        /// </summary>
+        /// <param name="vector2">The input <see cref="Vector2"/>.</param>
+        /// <returns>The <see cref="Direction"/> best fitting to <paramref name="vector2"/>.</returns>
+        public static Direction AsDirection(this Vector2 vector2)
+        {
+            return GetDirection(vector2.x, vector2.y);
+        }
+
+        /// <summary>
+        /// Get a <see cref="Direction"/> best fitting to the specified horizontal and vertical components.
+        /// </summary>
+        /// <param name="horizontal">The horizontal component.</param>
+        /// <param name="vertical">The vertical component.</param>
+        /// <returns>The <see cref="Direction"/> best fitting to <paramref name="horizontal"/> and <paramref name="vertical"/>.</returns>
+        public static Direction GetDirection(float horizontal, float vertical)
+        {
+            if (Mathf.Abs(horizontal) > Mathf.Abs(vertical))
+            {
+                return horizontal > 0 ? Direction.Right : Direction.Left;
+            }
+            else
+            {
+                return vertical > 0 ? Direction.Front : Direction.Back;
+            }
+        }
     }
 }
