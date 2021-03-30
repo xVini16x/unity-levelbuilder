@@ -2,15 +2,10 @@
 
 namespace UnityLevelEditor.Model
 {
-    using RoomExtension;
-    
-    public class CornerElement : MonoBehaviour
+    public class CornerElement : RoomElement
     {
         [field: SerializeField, HideInInspector]
         public RoomElementType Type { get; set; }
-        
-        [field: SerializeField, HideInInspector]
-        public ExtendableRoom ExtendableRoom { get; set; }
 
         [field: SerializeField, HideInInspector]
         public Direction4Diagonal Direction { get; set; }

@@ -62,7 +62,7 @@ namespace UnityLevelEditor.Editor
             }
 
             var roomElement = t.GetComponent<WallElement>();
-            return (roomElement != null && roomElement.Type.IsWallType());
+            return (roomElement != null);
         }
 
         public override void OnToolGUI(EditorWindow window)

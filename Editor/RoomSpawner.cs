@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 
 using Sirenix.OdinInspector;
@@ -60,7 +61,7 @@ namespace UnityLevelEditor.Editor
             {
                 return;
             }
-
+            
             loadedDefaultValues = true;
             var levelBuilderSettings = LevelBuilderSettings.GetOrCreateSettings();
             fullWall = levelBuilderSettings.fullWall;
@@ -495,6 +496,7 @@ namespace UnityLevelEditor.Editor
                   extendableRoom.OuterCorner = outerCorner;
                   extendableRoom.Floor = floor;
                   extendableRoom.FloorSize = floorSize;
+                  extendableRoom.MaterialSlotSetup = materialSlotSetup;
                   
                   Undo.RegisterCreatedObjectUndo(room, "Room Creation");
                   Undo.SetCurrentGroupName("Room Creation");

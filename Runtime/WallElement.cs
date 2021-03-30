@@ -1,23 +1,20 @@
 ﻿using System;
 
 using UnityEngine;
-using UnityLevelEditor.RoomExtension;
 
 namespace UnityLevelEditor.Model
 {
     [Serializable]
-    public class WallElement : MonoBehaviour
+    public class WallElement : RoomElement
     {
-        [field: SerializeField]
+        [field: SerializeField, HideInInspector]
         public RoomElementType Type { get; set; }
-        
-        [field: SerializeField]
-        public ExtendableRoom ExtendableRoom { get; set; }
 
-        [field: SerializeField]
+        [field: SerializeField, HideInInspector]
         public Direction Direction { get; set; }
         
-        [field: SerializeField]
+        [field: SerializeField, HideInInspector]
         public Vector2Int FloorTilePosition { get; set; }
+        
     }
 }

@@ -9,5 +9,6 @@ namespace UnityLevelEditor.Model
     {
         [SerializeField] private MaterialSlotMappingsPerMesh materialSlots;
         
+        public MaterialSlotMappingsPerMesh MaterialSlots => materialSlots;
     }
 }

@@ -13,6 +13,5 @@
         BelowRight,
         BelowOuter,
         BelowSides,
-        Bottom //TODO Remove
     }
 }

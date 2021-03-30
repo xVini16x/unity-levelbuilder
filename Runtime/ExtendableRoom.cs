@@ -38,7 +38,7 @@ namespace UnityLevelEditor.RoomExtension
         public RoomElementSpawnSettings InnerCorner { get; set; }
 
         [field: SerializeField, HideInInspector]
-        public MaterialSlotSetup MaterialSlotSetup { get; internal set; }
+        public MaterialSlotSetup MaterialSlotSetup { get; set; }
 
         [field: SerializeField, HideInInspector]
         public float FloorSize { get; set; }
@@ -224,6 +224,7 @@ namespace UnityLevelEditor.RoomExtension
             var spawnOrientation = direction.ToSpawnOrientation();
             var angle = spawnOrientation.ToAngle();
             var spawnedObject = (GameObject)PrefabUtility.InstantiatePrefab(spawnSettings.Prefab, transform);
+            Undo.RegisterCreatedObjectUndo(spawnedObject, "");
             spawnedObject.transform.position = spawnPosition;
 
             var wallElement = spawnedObject.AddComponent<WallElement>();
@@ -235,9 +236,8 @@ namespace UnityLevelEditor.RoomExtension
             wallElement.ExtendableRoom = this;
             wallElement.Direction = direction;
             wallElement.FloorTilePosition = floorTilePosition;
-
-            //TODO Texture
-            Undo.RegisterCreatedObjectUndo(wallElement.gameObject, "");
+            
+            wallElement.ApplyMaterial(spawnSettings.MaterialOverrides);
             return wallElement;
         }
 
@@ -248,9 +248,11 @@ namespace UnityLevelEditor.RoomExtension
             var spawnPosition = OffSetPosition(floorPosition, direction, FloorSize / 2);
             var angle = type == RoomElementType.InnerCorner ? direction.GetInnerCornerAngle() : direction.GetOuterCornerAngle();
             var spawnedObject = (GameObject)PrefabUtility.InstantiatePrefab(spawnSettings.Prefab, transform);
+            Undo.RegisterCreatedObjectUndo(spawnedObject, "");
             spawnedObject.transform.position = spawnPosition;
 
             var corner = spawnedObject.AddComponent<CornerElement>();
+        
             if (Mathf.Abs(angle) > 0.01f)
             {
                 spawnedObject.transform.Rotate(Vector3.up, angle);
@@ -259,9 +261,9 @@ namespace UnityLevelEditor.RoomExtension
             corner.ExtendableRoom = this;
             corner.FloorTilePosition = floorTilePosition;
             corner.Direction = direction;
-
-            //TODO Texture
-            Undo.RegisterCreatedObjectUndo(corner.gameObject, "");
+            
+            corner.ApplyMaterial(spawnSettings.MaterialOverrides);
+    
             return corner;
         }
 
@@ -277,7 +279,7 @@ namespace UnityLevelEditor.RoomExtension
             FloorGridDictionary[floorTilePosition] = floorElement;
             spawnedObject.name = floorTilePosition.ToString();
 
-            //TODO Texture
+            floorElement.ApplyMaterial(Floor.MaterialOverrides);
             return floorElement;
         }
 
