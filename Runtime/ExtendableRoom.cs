@@ -113,20 +113,28 @@ namespace UnityLevelEditor.RoomExtension
 
                 if (FloorGridDictionary.TryGetValue(tileInDirection, out var neighbor))
                 {
-                    neighborsToReevaluate.Add(tileInDirection);
-                    Undo.RegisterCompleteObjectUndo(neighbor, "");
+                    HandleNeighboringFloor(neighbor, tileInDirection);
                 }
 
                 tileInDirection = tileInDirection + direction.Shift(1).AsVector2Int();
 
                 if (FloorGridDictionary.TryGetValue(tileInDirection, out neighbor))
                 {
-                    neighborsToReevaluate.Add(tileInDirection);
-                    Undo.RegisterCompleteObjectUndo(neighbor, "");
+                    HandleNeighboringFloor(neighbor, tileInDirection);
                 }
             }
 
             return neighborsToReevaluate;
+            
+            void HandleNeighboringFloor(FloorElement neighbor, Vector2Int vector2Int)
+            {
+                if (neighbor == null)
+                {
+                    neighbor = SpawnFloor(vector2Int);
+                }
+                neighborsToReevaluate.Add(vector2Int);
+                Undo.RegisterCompleteObjectUndo(neighbor, "");
+            }
         }
 
         private void RespawnWalls(Vector2Int floorTilePosition)
