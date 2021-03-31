@@ -1,4 +1,6 @@
-﻿namespace UnityLevelEditor.Model
+﻿using System;
+
+namespace UnityLevelEditor.Model
 {
     public enum RoomElementType
     {
@@ -7,7 +9,8 @@
         WallShortenedRight,
         WallShortenedBothEnds,
         Floor,
-        Corner,
+        OuterCorner,
+        InnerCorner
     }
 
     public static class RoomElementTypeExtensions
@@ -20,12 +23,13 @@
 
         public static bool IsCornerType(this RoomElementType type)
         {
-            return type == RoomElementType.Corner;
+            return type == RoomElementType.OuterCorner || type == RoomElementType.InnerCorner;
         }
 
         public static bool IsShortenedWall(this RoomElementType type)
         {
             return type == RoomElementType.WallShortenedLeft || type == RoomElementType.WallShortenedRight;
         }
+        
     }
 }

@@ -2,11 +2,16 @@
 {
     public enum MaterialSlotType
     {
-        Back,
-        Bottom,
-        Front,
+        Outer,
+        Inner,
         Left,
         Right,
-        Top
+        Top,
+        Sides,
+        BelowInner,
+        BelowLeft,
+        BelowRight,
+        BelowOuter,
+        BelowSides,
     }
 }
