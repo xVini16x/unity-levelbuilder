@@ -72,7 +72,7 @@ namespace UnityLevelEditor.Model
             return wallElement != null;
         }
 
-        internal void SetWall(Direction direction, WallElement toSet)
+        public void SetWall(Direction direction, WallElement toSet)
         {
             ref var wall = ref GetWall(direction);
             wall = toSet;
