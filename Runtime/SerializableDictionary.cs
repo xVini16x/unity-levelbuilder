@@ -22,7 +22,7 @@ namespace UnityLevelEditor.Model
             {
                 keys.Add(pair.Key);
                 values.Add(pair.Value);
-            } 
+            }
         }
 
         // load dictionary from lists
@@ -34,15 +34,14 @@ namespace UnityLevelEditor.Model
             {
                 throw new System.Exception(string.Format("there are {0} keys and {1} values after deserialization. Make sure that both key and value types are serializable."));
             }
-
+        
             for (int i = 0; i < keys.Count; i++)
             {
                 this.Add(keys[i], values[i]);
             }
         }
-        
     }
-
+    
     [Serializable]
     public class FloorGridDictionary : SerializableDictionary<Vector2Int, FloorElement>
     {
@@ -60,8 +59,27 @@ namespace UnityLevelEditor.Model
     }
 
     [Serializable]
-    public class MaterialSelectionDictionary : SerializableDictionary<MaterialSlotType, List<Material>>
+    public class MaterialSelectionDictionary : SerializableDictionary<MaterialSlotType, MaterialListWrapper>
     {
+    }
+    
+    [Serializable]
+    public class MaterialListWrapper
+    {
+        [SerializeField] private List<Material> serializedList = new List<Material>();
+
+        public Material this[int index]
+        {
+            get => serializedList[index];
+            set => serializedList[index] = value;
+        }
+
+        public int Count => serializedList.Count;
+
+        public Material PickRandom()
+        {
+            return serializedList.PickRandom();
+        }
     }
 
     [Serializable]

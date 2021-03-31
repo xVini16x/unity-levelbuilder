@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
 using System.Linq;
 
 using Sirenix.OdinInspector;
@@ -12,7 +11,7 @@ using UnityEditor;
 namespace UnityLevelEditor.Editor
 {
     using Model;
-    using UnityLevelEditor.RoomExtension;
+    using RoomExtension;
 
     public class RoomSpawner : OdinEditorWindow
     {
@@ -48,7 +47,7 @@ namespace UnityLevelEditor.Editor
         [PropertyRange(1, RoomSizeLimit)]
         [SuffixLabel("Full Walls")]
         [SerializeField] private int roomSizeZ;
-        
+
         #endregion
 
         #region UI
@@ -89,91 +88,6 @@ namespace UnityLevelEditor.Editor
             ValidatePrefabs();
         }
 
-        /*
-        private void OnGUI()
-        {
-            GUILayout.Label("Room Element Prefabs", EditorStyles.boldLabel);
-            
-           
-            walls4[RoomSide.Front].Prefab = EditorGUILayout.ObjectField("Prefab", walls4[RoomSide.Front].Prefab, typeof(GameObject), false) as GameObject;
-            EditorGUILayout.Foldout(false, "Room Side");
-            walls4[RoomSide.Sides].Prefab = EditorGUILayout.ObjectField("Prefab", walls4[RoomSide.Sides].Prefab, typeof(GameObject), false) as GameObject;
-            fullWall = EditorGUILayout.ObjectField("Full Wall", fullWall, typeof(GameObject), true) as GameObject;
-            wallShortenedLeft =
-                EditorGUILayout.ObjectField("Wall Shortened Left Side", wallShortenedLeft, typeof(GameObject), true) as
-                    GameObject;
-            wallShortenedRight =
-                EditorGUILayout.ObjectField("Wall Shortened Right Side", wallShortenedRight, typeof(GameObject), true)
-                    as GameObject;
-            wallShortenedBothSides =
-                EditorGUILayout.ObjectField("Wall Shortened Both Sides", wallShortenedBothSides, typeof(GameObject),
-                    true) as GameObject;
-            floor = EditorGUILayout.ObjectField("Floor Prefab", floor, typeof(GameObject), true) as GameObject;
-            corner = EditorGUILayout.ObjectField("Corner Prefab", corner, typeof(GameObject), true) as GameObject;
-            transparentMaterial =
-                EditorGUILayout.ObjectField("Transparent Material", transparentMaterial, typeof(Material), false) as
-                    Material;
-            wallSideMaterial =
-                EditorGUILayout.ObjectField("Wall Side Material", wallSideMaterial, typeof(Material),
-                    false) as Material;
-
-            GUILayout.Label("Room Settings", EditorStyles.boldLabel);
-            roomName = EditorGUILayout.TextField("Name", roomName);
-
-            if (!PrefabsAreAssigned())
-            {
-                EditorGUILayout.HelpBox(
-                    "Please assign all prefabs to create a room. You can find default prefabs in the prefabs folder.",
-                    MessageType.Warning);
-                return;
-            }
-
-            Dictionary<RoomElementType, Bounds> boundsByType;
-
-            try
-            {
-                boundsByType = GetAllBoundsByType();
-            }
-            catch (MissingComponentException e)
-            {
-                EditorGUILayout.HelpBox(e.Message, MessageType.Error);
-                return;
-            }
-
-            if (!CheckBoundSizesCorrect(boundsByType, out var message))
-            {
-                EditorGUILayout.HelpBox(message, MessageType.Error);
-                return;
-            }
-
-            // Calculate valid room sizes (in Unity Units) based on wall and corner size for creation of slider
-            var fullWallBounds = boundsByType[RoomElementType.Wall];
-            var wallXLength = fullWallBounds.size.x;
-            var minRoomSize = wallXLength + 2 * boundsByType[RoomElementType.Corner].size.x;
-
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Room Size X");
-            roomSize.x = EditorGUILayout.IntSlider(roomSize.x, 1, RoomSizeLimit);
-            EditorGUILayout.EndHorizontal();
-
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Room Size Z");
-            roomSize.y = EditorGUILayout.IntSlider(roomSize.y, 1, RoomSizeLimit);
-            EditorGUILayout.EndHorizontal();
-
-            var roomSize3D = new Vector3(minRoomSize + ((roomSize.x - 1) * wallXLength), fullWallBounds.size.y,
-                minRoomSize + ((roomSize.y - 1) * wallXLength));
-
-            if (GUILayout.Button("Create Room"))
-            {
-                var roomCenter = Vector3.zero;
-                roomCenter.y = fullWallBounds.extents.y - boundsByType[RoomElementType.Floor].size.y;
-                var spawnInfo = new SpawnInfo(roomCenter, roomSize3D, roomSize);
-                SpawnNewRoom(spawnInfo, boundsByType);
-            }
-        }*/
-
-
         [Button("Create Room")]
         private void CreateRoom()
         {
@@ -192,6 +106,7 @@ namespace UnityLevelEditor.Editor
         private void ValidatePrefabs()
         {
             errorMessageDetails = "";
+            showErrorMessage = false;
             
             if (!PrefabsAreAssigned())
             {
@@ -211,7 +126,6 @@ namespace UnityLevelEditor.Editor
                 errorMessageDetails += BulletCharacter + e.Message;
                 return;
             }
-            
 
             warningMessageDetails = "";
             showWarningMessage = !CheckBoundSizesCorrect(boundsByType);
@@ -330,6 +244,7 @@ namespace UnityLevelEditor.Editor
                 if (!CheckXZSameSize(boundsByType[type][RoomSide.North], boundsByType.ToString(), out string message))
                 {
                     warningMessageDetails += message;
+                    fail = true;
                 }
             }
 
@@ -487,6 +402,9 @@ namespace UnityLevelEditor.Editor
                   firstTilePosition.z -= floorSize * (roomSizeZ / 2f) - floorSize / 2f;
       
                   var extendableRoom = room.AddComponent<ExtendableRoom>();
+                  
+                  fullWall.OnBeforeSerialize();
+                  
                   extendableRoom.FloorGridDictionary = new FloorGridDictionary();
                   extendableRoom.FullWall = fullWall;
                   extendableRoom.WallShortenedRight = wallShortenedRight;

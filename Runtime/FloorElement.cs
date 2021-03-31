@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Configuration;
 
 using UnityEditor;
 
@@ -12,15 +13,15 @@ namespace UnityLevelEditor.Model
         [field: SerializeField, HideInInspector]
         public Vector2Int GridPosition { get; set; }
 
-        [SerializeField] private WallElement northWall;
-        [SerializeField] private WallElement southWall;
-        [SerializeField] private WallElement eastWall;
-        [SerializeField] private WallElement westWall;
+        [SerializeField, HideInInspector] private WallElement northWall;
+        [SerializeField, HideInInspector] private WallElement southWall;
+        [SerializeField, HideInInspector] private WallElement eastWall;
+        [SerializeField, HideInInspector] private WallElement westWall;
 
-        [SerializeField] private CornerElement northEastCorner;
-        [SerializeField] private CornerElement southEastCorner;
-        [SerializeField] private CornerElement southWestCorner;
-        [SerializeField] private CornerElement northWestCorner;
+        [SerializeField, HideInInspector] private CornerElement northEastCorner;
+        [SerializeField, HideInInspector] private CornerElement southEastCorner;
+        [SerializeField, HideInInspector] private CornerElement southWestCorner;
+        [SerializeField, HideInInspector] private CornerElement northWestCorner;
 
 #if UNITY_EDITOR
         public void DeleteAllNeighbors()
@@ -99,7 +100,20 @@ namespace UnityLevelEditor.Model
             ref var corner = ref GetCorner(direction4Diagonal);
             corner = toSet;
         }
-
+        
 #endif
+        public void CopyOverValues(FloorElement floorElement)
+        {
+            ExtendableRoom = floorElement.ExtendableRoom;
+            GridPosition = floorElement.GridPosition;
+            northWall = floorElement.northWall;
+            southWall = floorElement.southWall;
+            eastWall = floorElement.eastWall;
+            westWall = floorElement.westWall;
+            northEastCorner = floorElement.northEastCorner;
+            southEastCorner = floorElement.southEastCorner;
+            southWestCorner = floorElement.southWestCorner;
+            northWestCorner = floorElement.northWestCorner;
+        }
     }
 }

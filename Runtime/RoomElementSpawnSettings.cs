@@ -4,7 +4,7 @@ using UnityEngine;
 namespace UnityLevelEditor.Model
 {
     [Serializable]
-    public class RoomElementSpawnSettings
+    public class RoomElementSpawnSettings 
     {
         [SerializeField] private GameObject prefab;
         [SerializeField] private MaterialSelectionDictionary materialOverrides;

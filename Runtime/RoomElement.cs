@@ -1,6 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
+using Sirenix.Utilities;
+
 using UnityEngine;
 
 using UnityLevelEditor.RoomExtension;
@@ -10,51 +12,25 @@ namespace UnityLevelEditor.Model
     public class RoomElement : MonoBehaviour
     {
         [field: SerializeField, HideInInspector]
-        public ExtendableRoom ExtendableRoom { get; set; }
+        public RoomElementType Type { get; set; }
         
-        public void ApplyMaterial(MaterialSelectionDictionary materialChoices, bool pickOnlyFirst = false)
-        {
-            if (materialChoices.Count == 0)
-            {
-                return;
-            }
-            
-            var meshFilter = GetComponentsInChildren<MeshFilter>();
+        [field: SerializeField, HideInInspector]
+        public ExtendableRoom ExtendableRoom { get; set; }
 
-            if (meshFilter.Length == 0)
+        public void ApplyMaterial(MaterialSelectionDictionary materialSelectionDictionary)
+        {
+            var meshFilter = GetComponentInChildren<MeshFilter>();
+
+            if (meshFilter == null)
             {
                 Debug.LogWarning("Cannot apply materials because roomElement '" + gameObject.name + "' has no meshFilters as children.");
                 return;
             }
             
-            var meshes = meshFilter.Select(filter => filter.sharedMesh).ToArray();
-            var meshRendererArray = meshFilter.Select(filter => filter.GetComponent<MeshRenderer>()).ToArray();
+            var meshes = meshFilter.sharedMesh;
+            var meshRendererArray = meshFilter.GetComponent<MeshRenderer>();
             
-            var mappings = ExtendableRoom.MaterialSlotSetup;
-
-            for (var i = 0; i < meshes.Length; i++)
-            {
-                var mesh = meshes[i];
-                var meshRenderer = meshRendererArray[i];
-                var materials = meshRenderer.sharedMaterials;
-                
-                var mapping = mappings.MaterialSlots[mesh];
-                
-                foreach (var slot in materialChoices.Keys)
-                {
-                    var materialChoice = materialChoices[slot];
-
-                    if (materialChoice == null || materialChoice.Count == 0)
-                    {
-                        Debug.LogWarning("Material Choice for side '" + slot + "' cannot be applied. List is null or empty.");
-                        continue;
-                    }
-                    
-                    materials[mapping[slot]] = pickOnlyFirst ? materialChoice[0] : materialChoice.PickRandom();
-                }
-
-                meshRenderer.sharedMaterials = materials;
-            }
+            ExtendableRoom.MaterialSlotSetup.ApplyRandomMaterials(meshes, meshRendererArray, materialSelectionDictionary);
         }
     }
 }

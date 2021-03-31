@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using ICSharpCode.NRefactory.Ast;
-
 using UnityEditor;
 
 using UnityEngine;
@@ -13,7 +11,16 @@ namespace UnityLevelEditor.RoomExtension
 
     public class ExtendableRoom : MonoBehaviour
     {
-        [field: SerializeField]
+        [SerializeField]
+        private MaterialSlotSetup materialSlotSetup;
+
+        public MaterialSlotSetup MaterialSlotSetup
+        {
+            get => materialSlotSetup;
+            set => materialSlotSetup = value;
+        }
+
+        [field: SerializeField, HideInInspector]
         public FloorGridDictionary FloorGridDictionary { get; set; }
 
         [field: SerializeField, HideInInspector]
@@ -38,9 +45,6 @@ namespace UnityLevelEditor.RoomExtension
         public RoomElementSpawnSettings InnerCorner { get; set; }
 
         [field: SerializeField, HideInInspector]
-        public MaterialSlotSetup MaterialSlotSetup { get; set; }
-
-        [field: SerializeField, HideInInspector]
         public float FloorSize { get; set; }
 
 #if UNITY_EDITOR
@@ -62,7 +66,7 @@ namespace UnityLevelEditor.RoomExtension
         public FloorElement DeleteFloor(Vector2Int floorTilePosition, Vector2Int newFloorPosition)
         {
             Undo.RegisterCompleteObjectUndo(this, "");
-            
+
             if (!FloorGridDictionary.TryGetValue(floorTilePosition, out var floorElement))
             {
                 return null;
@@ -276,6 +280,7 @@ namespace UnityLevelEditor.RoomExtension
             var floorElement = spawnedObject.AddComponent<FloorElement>();
             floorElement.ExtendableRoom = this;
             floorElement.GridPosition = floorTilePosition;
+            floorElement.Type = RoomElementType.Floor;
             FloorGridDictionary[floorTilePosition] = floorElement;
             spawnedObject.name = floorTilePosition.ToString();
 
