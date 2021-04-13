@@ -1,6 +1,6 @@
 {
   "name": "de.hats.unity-levelbuilder",
-  "version": "2.0.1",
+  "version": "2.1.0",
   "displayName": "Level Builder Tool",
   "description": "This is a custom tool to speed up prototyping room-based level design.",
   "unity": "2019.4",

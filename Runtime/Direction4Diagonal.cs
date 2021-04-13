@@ -192,5 +192,22 @@ namespace UnityLevelEditor.Model
                     throw new ArgumentOutOfRangeException(nameof(direction4Diagonal), direction4Diagonal, null);
             }
         }
+
+        public static string GeographicName(this Direction4Diagonal direction4Diagonal)
+        {
+            switch (direction4Diagonal)
+            {
+                case Direction4Diagonal.UpRight:
+                    return "North East";
+                case Direction4Diagonal.DownRight:
+                    return "South East";
+                case Direction4Diagonal.DownLeft:
+                    return "South West";
+                case Direction4Diagonal.UpLeft:
+                    return "North West";
+                default:
+                    return "";
+            }
+        }
     }
 }

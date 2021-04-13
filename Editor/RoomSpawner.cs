@@ -389,50 +389,43 @@ namespace UnityLevelEditor.Editor
         #endregion
 
         #endregion
-      
-              #region Room Creation
-      
-              #region Element Spawning
-              
-              private void SpawnNewRoom()
-              {
-                  var room = new GameObject(roomName);
-                  var firstTilePosition = Vector3.zero;
-                  firstTilePosition.x -= floorSize * (roomSizeX / 2f) - floorSize / 2f;
-                  firstTilePosition.z -= floorSize * (roomSizeZ / 2f) - floorSize / 2f;
-      
-                  var extendableRoom = room.AddComponent<ExtendableRoom>();
-                  
-                  fullWall.OnBeforeSerialize();
-                  
-                  extendableRoom.FloorGridDictionary = new FloorGridDictionary();
-                  extendableRoom.FullWall = (PrefabsPerSide) fullWall.Clone();
-                  extendableRoom.WallShortenedRight = (PrefabsPerSide) wallShortenedRight.Clone();
-                  extendableRoom.WallShortenedLeft = (PrefabsPerSide) wallShortenedLeft.Clone();
-                  extendableRoom.WallShortenedBothSides = (PrefabsPerSide) wallShortenedBothSides.Clone();
-                  extendableRoom.InnerCorner = (RoomElementSpawnSettings) innerCorner.Clone();
-                  extendableRoom.OuterCorner = (RoomElementSpawnSettings) outerCorner.Clone();
-                  extendableRoom.Floor = (RoomElementSpawnSettings) floor.Clone();
-                  extendableRoom.FloorSize = floorSize;
-                  extendableRoom.MaterialSlotSetup = materialSlotSetup;
-                  
-                  Undo.RegisterCreatedObjectUndo(room, "Room Creation");
-                  Undo.SetCurrentGroupName("Room Creation");
+        
+        #region Room Creation
+        private void SpawnNewRoom()
+        {
+          var room = new GameObject(roomName);
+          var firstTilePosition = Vector3.zero;
+          firstTilePosition.x -= floorSize * (roomSizeX / 2f) - floorSize / 2f;
+          firstTilePosition.z -= floorSize * (roomSizeZ / 2f) - floorSize / 2f;
 
-                  for (var z = 0; z < roomSizeZ; z++)
-                  {
-                      for (var x = 0; x < roomSizeX; x++)
-                      {
-                          extendableRoom.Spawn(new Vector2Int(x, z));
-                      }
-                  }
-                  
-                  Undo.CollapseUndoOperations(Undo.GetCurrentGroup());
+          var extendableRoom = room.AddComponent<ExtendableRoom>();
+          extendableRoom.FloorGridDictionary = new FloorGridDictionary();
+          extendableRoom.FullWall = (PrefabsPerSide) fullWall.Clone();
+          extendableRoom.WallShortenedRight = (PrefabsPerSide) wallShortenedRight.Clone();
+          extendableRoom.WallShortenedLeft = (PrefabsPerSide) wallShortenedLeft.Clone();
+          extendableRoom.WallShortenedBothSides = (PrefabsPerSide) wallShortenedBothSides.Clone();
+          extendableRoom.InnerCorner = (RoomElementSpawnSettings) innerCorner.Clone();
+          extendableRoom.OuterCorner = (RoomElementSpawnSettings) outerCorner.Clone();
+          extendableRoom.Floor = (RoomElementSpawnSettings) floor.Clone();
+          extendableRoom.FloorSize = floorSize;
+          extendableRoom.MaterialSlotSetup = materialSlotSetup;
+          
+          Undo.RegisterCreatedObjectUndo(room, "Room Creation");
+          Undo.SetCurrentGroupName("Room Creation");
+
+          for (var z = 0; z < roomSizeZ; z++)
+          {
+              for (var x = 0; x < roomSizeX; x++)
+              {
+                  extendableRoom.Spawn(new Vector2Int(x, z));
               }
-              
-              #endregion
+          }
+          
+          Undo.CollapseUndoOperations(Undo.GetCurrentGroup());
+        }
+
     
-            #endregion
+        #endregion
           
     }
 }

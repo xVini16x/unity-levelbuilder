@@ -47,6 +47,126 @@ namespace UnityLevelEditor.RoomExtension
         [field: SerializeField, HideInInspector]
         public float FloorSize { get; set; }
 
+        private GameObject floorRoot;
+
+        private GameObject FloorRoot
+        {
+            get
+            {
+                if (floorRoot == null)
+                {
+                    floorRoot = new GameObject();
+                    floorRoot.transform.parent = transform;
+                    floorRoot.gameObject.name = "Floors";
+                }
+
+                return floorRoot;
+            }
+        }
+
+        private GameObject eastWallRoot;
+
+        private GameObject EastWallRoot
+        {
+            get
+            {
+                if (eastWallRoot == null)
+                {
+                    eastWallRoot = new GameObject();
+                    eastWallRoot.transform.parent = transform;
+                    eastWallRoot.gameObject.name = "East Walls";
+                }
+
+                return eastWallRoot;
+            }
+        }
+        
+        
+        private GameObject southWallRoot;
+
+        private GameObject SouthWallRoot
+        {
+            get
+            {
+                if (southWallRoot == null)
+                {
+                    southWallRoot = new GameObject();
+                    southWallRoot.transform.parent = transform;
+                    southWallRoot.gameObject.name = "South Walls";
+                }
+
+                return southWallRoot;
+            }
+        }
+        
+        private GameObject westWallRoot;
+
+        private GameObject WestWallRoot
+        {
+            get
+            {
+                if (westWallRoot == null)
+                {
+                    westWallRoot = new GameObject();
+                    westWallRoot.transform.parent = transform;
+                    westWallRoot.gameObject.name = "West Walls";
+                }
+
+                return westWallRoot;
+            }
+        }
+        
+        private GameObject northWallRoot;
+
+        private GameObject NorthWallRoot
+        {
+            get
+            {
+                if (northWallRoot == null)
+                {
+                    northWallRoot = new GameObject();
+                    northWallRoot.transform.parent = transform;
+                    northWallRoot.gameObject.name = "North Walls";
+                }
+
+                return northWallRoot;
+            }
+        }
+
+        private GameObject innerCornerRoot;
+        
+        private GameObject InnerCornerRoot
+        {
+            get
+            {
+                if (innerCornerRoot == null)
+                {
+                    innerCornerRoot = new GameObject();
+                    innerCornerRoot.transform.parent = transform;
+                    innerCornerRoot.gameObject.name = "Inner Corners";
+                }
+
+                return innerCornerRoot;
+            }
+        }
+        
+        private GameObject outerCornerRoot;
+        
+        private GameObject OuterCornerRoot
+        {
+            get
+            {
+                if (outerCornerRoot == null)
+                {
+                    outerCornerRoot = new GameObject();
+                    outerCornerRoot.transform.parent = transform;
+                    outerCornerRoot.gameObject.name = "Outer Corners";
+                }
+
+                return outerCornerRoot;
+            }
+        }
+
 #if UNITY_EDITOR
 
         public FloorElement Spawn(Vector2Int floorTilePosition)
@@ -227,9 +347,38 @@ namespace UnityLevelEditor.RoomExtension
             var spawnPosition = OffSetPosition(floorPosition, direction, FloorSize / 2);
             var spawnOrientation = direction.ToSpawnOrientation();
             var angle = spawnOrientation.ToAngle();
-            var spawnedObject = (GameObject)PrefabUtility.InstantiatePrefab(spawnSettings.Prefab, transform);
+
+            Transform parent;
+            string nameAddition;
+
+            switch (spawnOrientation)
+            {
+                case SpawnOrientation.Front:
+                    parent = NorthWallRoot.transform;
+                    nameAddition = "North";
+                    break;
+                case SpawnOrientation.Right:
+                    parent = EastWallRoot.transform;
+                    nameAddition = "East"; 
+                    break;
+                case SpawnOrientation.Back:
+                    parent = SouthWallRoot.transform;
+                    nameAddition = "South";
+                    break;
+                case SpawnOrientation.Left:
+                    parent = WestWallRoot.transform;
+                    nameAddition = "West";
+                    break;
+                default:
+                    parent = transform;
+                    nameAddition = "Unidentified";
+                    break;
+            }
+            
+            var spawnedObject = (GameObject)PrefabUtility.InstantiatePrefab(spawnSettings.Prefab, parent);
             Undo.RegisterCreatedObjectUndo(spawnedObject, "");
             spawnedObject.transform.position = spawnPosition;
+            spawnedObject.name = $"{spawnSettings.Prefab.name} | {floorTilePosition} {nameAddition}";
 
             var wallElement = spawnedObject.AddComponent<WallElement>();
             if (Mathf.Abs(angle) > 0.01f)
@@ -251,7 +400,12 @@ namespace UnityLevelEditor.RoomExtension
             var floorPosition = CalculateFloorPosition(floorTilePosition);
             var spawnPosition = OffSetPosition(floorPosition, direction, FloorSize / 2);
             var angle = type == RoomElementType.InnerCorner ? direction.GetInnerCornerAngle() : direction.GetOuterCornerAngle();
-            var spawnedObject = (GameObject)PrefabUtility.InstantiatePrefab(spawnSettings.Prefab, transform);
+            var parent = type == RoomElementType.InnerCorner ? InnerCornerRoot.transform : OuterCornerRoot.transform;
+            var nameAddition = direction.GeographicName();
+            
+            var spawnedObject = (GameObject)PrefabUtility.InstantiatePrefab(spawnSettings.Prefab, parent);
+            spawnedObject.name = $"{spawnSettings.Prefab.name} | {floorTilePosition} {nameAddition}";
+            
             Undo.RegisterCreatedObjectUndo(spawnedObject, "");
             spawnedObject.transform.position = spawnPosition;
 
@@ -274,7 +428,7 @@ namespace UnityLevelEditor.RoomExtension
         private FloorElement SpawnFloor(Vector2Int floorTilePosition)
         {
             var spawnPosition = CalculateFloorPosition(floorTilePosition);
-            var spawnedObject = (GameObject)PrefabUtility.InstantiatePrefab(Floor.Prefab, transform);
+            var spawnedObject = (GameObject)PrefabUtility.InstantiatePrefab(Floor.Prefab, FloorRoot.transform);
             Undo.RegisterCreatedObjectUndo(spawnedObject, "");
             spawnedObject.transform.position = spawnPosition;
             var floorElement = spawnedObject.AddComponent<FloorElement>();
