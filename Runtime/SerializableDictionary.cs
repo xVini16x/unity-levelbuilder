@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using UnityEngine;
 using UnityLevelEditor.RoomExtension;
@@ -7,7 +8,7 @@ using UnityLevelEditor.RoomExtension;
 namespace UnityLevelEditor.Model
 {
     [Serializable]
-    public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver
+    public class SerializableDictionary<TKey, TValue> : Dictionary<TKey, TValue>, ISerializationCallbackReceiver, ICloneable
     {
         [SerializeField] private List<TKey> keys = new List<TKey>();
 
@@ -40,6 +41,47 @@ namespace UnityLevelEditor.Model
                 this.Add(keys[i], values[i]);
             }
         }
+
+        object ICloneable.Clone() => Clone();
+        
+        public virtual SerializableDictionary<TKey, TValue> Clone()
+        {
+            var newDictionary = new SerializableDictionary<TKey, TValue>();
+            
+            return CloneInto(newDictionary);
+        }
+
+        protected SerializableDictionary<TKey, TValue> CloneInto(SerializableDictionary<TKey, TValue> newDictionary)
+        {
+            if (typeof(ICloneable).IsAssignableFrom(typeof(TKey)))
+            {
+                for (var i = 0; i < keys.Count; i++)
+                {
+                    newDictionary.keys.Add((TKey)((ICloneable)keys[i]).Clone());
+                }
+            }
+            else
+            {
+                newDictionary.keys = keys;
+            }
+
+            if (typeof(ICloneable).IsAssignableFrom(typeof(TValue)))
+            {
+                for (var i = 0; i < values.Count; i++)
+                {
+                    newDictionary.values.Add((TValue)((ICloneable)values[i]).Clone());
+                }
+            }
+            else
+            {
+                newDictionary.values = values;
+            }
+            
+            //To load list values into dictionary
+            newDictionary.OnAfterDeserialize();
+
+            return newDictionary;
+        }
     }
     
     [Serializable]
@@ -61,6 +103,11 @@ namespace UnityLevelEditor.Model
     [Serializable]
     public class MaterialSelectionDictionary : SerializableDictionary<MaterialSlotType, MaterialListWrapper>
     {
+        public override SerializableDictionary<MaterialSlotType, MaterialListWrapper> Clone()
+        {
+            var newDictionary = new MaterialSelectionDictionary();
+            return CloneInto(newDictionary);
+        }
     }
     
     [Serializable]
@@ -85,7 +132,11 @@ namespace UnityLevelEditor.Model
     [Serializable]
     public class PrefabsPerSide : SerializableDictionary<RoomSide, RoomElementSpawnSettings>
     {
-       
+        public override SerializableDictionary<RoomSide, RoomElementSpawnSettings> Clone()
+        {
+            var newDictionary = new PrefabsPerSide();
+            return CloneInto(newDictionary);
+        }
     }
     
     [Serializable]

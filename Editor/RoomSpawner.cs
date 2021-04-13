@@ -54,7 +54,7 @@ namespace UnityLevelEditor.Editor
 
         #region Window Creation
 
-        private void OnFocus()
+        protected void OnFocus()
         {
             if (loadedDefaultValues)
             {
@@ -63,16 +63,16 @@ namespace UnityLevelEditor.Editor
             
             loadedDefaultValues = true;
             var levelBuilderSettings = LevelBuilderSettings.GetOrCreateSettings();
-            fullWall = levelBuilderSettings.fullWall;
-            wallShortenedLeft = levelBuilderSettings.wallShortenedLeft;
-            wallShortenedRight = levelBuilderSettings.wallShortenedRight;
-            wallShortenedBothSides = levelBuilderSettings.wallShortenedBothSides;
-            floor = levelBuilderSettings.floor;
-            innerCorner = levelBuilderSettings.innerCorner;
-            outerCorner = levelBuilderSettings.outerCorner;
+            fullWall = (PrefabsPerSide) levelBuilderSettings.fullWall.Clone();
+            wallShortenedLeft = (PrefabsPerSide) levelBuilderSettings.wallShortenedLeft.Clone();
+            wallShortenedRight = (PrefabsPerSide) levelBuilderSettings.wallShortenedRight.Clone();
+            wallShortenedBothSides = (PrefabsPerSide) levelBuilderSettings.wallShortenedBothSides.Clone();
+            floor = (RoomElementSpawnSettings) levelBuilderSettings.floor.Clone();
+            innerCorner = (RoomElementSpawnSettings) levelBuilderSettings.innerCorner.Clone();
+            outerCorner = (RoomElementSpawnSettings) levelBuilderSettings.outerCorner.Clone();
             materialSlotSetup = levelBuilderSettings.materialSlotSetup;
             floorSize = levelBuilderSettings.floorSize;
-            roomName = levelBuilderSettings.roomName;
+            roomName = (string) levelBuilderSettings.roomName.Clone();
             roomSizeX = levelBuilderSettings.roomSizeX;
             roomSizeZ = levelBuilderSettings.roomSizeZ;
         }
@@ -406,13 +406,13 @@ namespace UnityLevelEditor.Editor
                   fullWall.OnBeforeSerialize();
                   
                   extendableRoom.FloorGridDictionary = new FloorGridDictionary();
-                  extendableRoom.FullWall = fullWall;
-                  extendableRoom.WallShortenedRight = wallShortenedRight;
-                  extendableRoom.WallShortenedLeft = wallShortenedLeft;
-                  extendableRoom.WallShortenedBothSides = wallShortenedBothSides;
-                  extendableRoom.InnerCorner = innerCorner;
-                  extendableRoom.OuterCorner = outerCorner;
-                  extendableRoom.Floor = floor;
+                  extendableRoom.FullWall = (PrefabsPerSide) fullWall.Clone();
+                  extendableRoom.WallShortenedRight = (PrefabsPerSide) wallShortenedRight.Clone();
+                  extendableRoom.WallShortenedLeft = (PrefabsPerSide) wallShortenedLeft.Clone();
+                  extendableRoom.WallShortenedBothSides = (PrefabsPerSide) wallShortenedBothSides.Clone();
+                  extendableRoom.InnerCorner = (RoomElementSpawnSettings) innerCorner.Clone();
+                  extendableRoom.OuterCorner = (RoomElementSpawnSettings) outerCorner.Clone();
+                  extendableRoom.Floor = (RoomElementSpawnSettings) floor.Clone();
                   extendableRoom.FloorSize = floorSize;
                   extendableRoom.MaterialSlotSetup = materialSlotSetup;
                   

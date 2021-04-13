@@ -4,7 +4,7 @@ using UnityEngine;
 namespace UnityLevelEditor.Model
 {
     [Serializable]
-    public class RoomElementSpawnSettings 
+    public class RoomElementSpawnSettings : ICloneable
     {
         [SerializeField] private GameObject prefab;
         [SerializeField] private MaterialSelectionDictionary materialOverrides;
@@ -20,5 +20,15 @@ namespace UnityLevelEditor.Model
             get => materialOverrides;
             set => materialOverrides = value;
         }
+
+        public object Clone()
+        {
+            var newSettings = new RoomElementSpawnSettings();
+            newSettings.prefab = prefab;
+            newSettings.materialOverrides = (MaterialSelectionDictionary) materialOverrides.Clone();
+
+            return newSettings;
+        }
+        
     }
 }
