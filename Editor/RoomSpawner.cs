@@ -54,7 +54,7 @@ namespace UnityLevelEditor.Editor
 
         #region Window Creation
 
-        protected void OnFocus()
+        protected override void Initialize()
         {
             if (loadedDefaultValues)
             {
