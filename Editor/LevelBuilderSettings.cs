@@ -12,35 +12,35 @@ namespace UnityLevelEditor.Editor
 {
     using Model;
 
-    internal class LevelBuilderSettings : ScriptableObject
+    public class LevelBuilderSettings : ScriptableObject
     {
         private const string MyCustomSettingsPath = "Assets/Editor/LevelBuilderSettings.asset";
         private const string FolderPath = "Assets/Editor";
 
 #pragma warning disable CS0414
-        [SerializeField] internal PrefabsPerSide fullWall;
-        [SerializeField] internal PrefabsPerSide wallShortenedLeft;
-        [SerializeField] internal PrefabsPerSide wallShortenedRight;
-        [SerializeField] internal PrefabsPerSide wallShortenedBothSides;
-        [SerializeField] internal RoomElementSpawnSettings floor;
-        [SerializeField] internal RoomElementSpawnSettings outerCorner;
-        [SerializeField] internal RoomElementSpawnSettings innerCorner;
-        [SerializeField] internal MaterialSlotSetup materialSlotSetup;
+        [SerializeField] public PrefabsPerSide fullWall;
+        [SerializeField] public PrefabsPerSide wallShortenedLeft;
+        [SerializeField] public PrefabsPerSide wallShortenedRight;
+        [SerializeField] public PrefabsPerSide wallShortenedBothSides;
+        [SerializeField] public RoomElementSpawnSettings floor;
+        [SerializeField] public RoomElementSpawnSettings outerCorner;
+        [SerializeField] public RoomElementSpawnSettings innerCorner;
+        [SerializeField] public MaterialSlotSetup materialSlotSetup;
         
-        [SerializeField] [UsedImplicitly] internal string roomName = "StandardRoom";
+        [SerializeField] [UsedImplicitly] public string roomName = "StandardRoom";
         [SuffixLabel("UU")]
-        [SerializeField] internal float floorSize;
+        [SerializeField] public float floorSize;
         
         [Title("RoomSize")]
         [PropertyRange(1, RoomSpawner.RoomSizeLimit)]
         [LabelText("X")]
         [SuffixLabel("Full Walls")]
-        [SerializeField] internal int roomSizeX = 1;
+        [SerializeField] public int roomSizeX = 1;
 
         [PropertyRange(1, RoomSpawner.RoomSizeLimit)]
         [LabelText("Z")]
         [SuffixLabel("Full Walls")]
-        [SerializeField] internal int roomSizeZ = 1;
+        [SerializeField] public int roomSizeZ = 1;
 #pragma warning restore CS0414
 
         internal static LevelBuilderSettings GetOrCreateSettings()
@@ -67,6 +67,8 @@ namespace UnityLevelEditor.Editor
         {
             return new SerializedObject(GetOrCreateSettings());
         }
+        
+        
     }
 
     internal static class AssetSettingsProviderRegister
