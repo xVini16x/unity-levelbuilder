@@ -12,7 +12,7 @@ namespace UnityLevelEditor
         /// <typeparam name="TSource">The type of the elements of <paramref name="list"/>.</typeparam>
         /// <returns>A random element from the list.</returns>
         /// <exception cref="ArgumentException"><paramref name="list"/> is null or empty.</exception>
-        public static TSource PickRandom<TSource>(this IList<TSource> list)
+        internal static TSource PickRandom<TSource>(this IList<TSource> list)
         {
             if (list == null) { throw new ArgumentNullException(nameof(list), $"{nameof(list)} is null"); }
             if (list.Count == 0) { throw new ArgumentException($"Cannot select a random element from an empty {nameof(IList<TSource>)}.", nameof(list)); }
