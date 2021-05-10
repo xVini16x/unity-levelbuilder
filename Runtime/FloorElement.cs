@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Configuration;
 
@@ -95,7 +95,7 @@ namespace UnityLevelEditor.Model
             }
         }
 
-        internal void SetCorner(Direction4Diagonal direction4Diagonal, CornerElement toSet)
+        public void SetCorner(Direction4Diagonal direction4Diagonal, CornerElement toSet)
         {
             ref var corner = ref GetCorner(direction4Diagonal);
             corner = toSet;
