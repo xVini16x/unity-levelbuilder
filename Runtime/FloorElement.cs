@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Configuration;
 
@@ -114,6 +114,11 @@ namespace UnityLevelEditor.Model
             southEastCorner = floorElement.southEastCorner;
             southWestCorner = floorElement.southWestCorner;
             northWestCorner = floorElement.northWestCorner;
+        }
+        
+        public override void CopyOverValues(RoomElement roomElement)
+        {
+            CopyOverValues((FloorElement) roomElement);
         }
     }
 }

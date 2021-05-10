@@ -9,13 +9,15 @@ using UnityLevelEditor.RoomExtension;
 
 namespace UnityLevelEditor.Model
 {
-    public class RoomElement : MonoBehaviour
+    public abstract class RoomElement : MonoBehaviour
     {
         [field: SerializeField, HideInInspector]
         public RoomElementType Type { get; set; }
         
         [field: SerializeField, HideInInspector]
         public ExtendableRoom ExtendableRoom { get; set; }
+
+        public abstract void CopyOverValues(RoomElement roomElement);
 
         public void ApplyMaterial(MaterialSelectionDictionary materialSelectionDictionary)
         {

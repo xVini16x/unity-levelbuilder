@@ -21,5 +21,10 @@ namespace UnityLevelEditor.Model
             FloorTilePosition = wallElement.FloorTilePosition;
         }
         
+        public override void CopyOverValues(RoomElement roomElement)
+        {
+            CopyOverValues((WallElement) roomElement);
+        }
+        
     }
 }

@@ -17,5 +17,10 @@ namespace UnityLevelEditor.Model
             Direction = cornerElement.Direction;
             FloorTilePosition = cornerElement.FloorTilePosition;
         }
+
+        public override void CopyOverValues(RoomElement roomElement)
+        {
+            CopyOverValues((CornerElement) roomElement);
+        }
     }
 }
