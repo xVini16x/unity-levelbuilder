@@ -34,19 +34,30 @@ namespace UnityLevelEditor.Editor
 
         void OnEnable()
         {
+#if UNITY_2020_1_OR_NEWER
+            ToolManager.activeToolChanged += ChangeIcon;
+#else
             EditorTools.activeToolChanged += ChangeIcon;
+#endif
             ChangeIcon();
         }
 
         private void OnDisable()
         {
+#if UNITY_2020_1_OR_NEWER
+            ToolManager.activeToolChanged -= ChangeIcon;
+#else
             EditorTools.activeToolChanged -= ChangeIcon;
+#endif
         }
 
         private void ChangeIcon()
         {
+#if UNITY_2020_1_OR_NEWER
+            var icon = ToolManager.IsActiveTool(this) ? toolIconActive : toolIcon;
+#else
             var icon = EditorTools.IsActiveTool(this) ? toolIconActive : toolIcon;
-
+#endif
             iconContent = new GUIContent() { image = icon, text = text, tooltip = tooltip };
         }
 
