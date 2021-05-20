@@ -47,124 +47,90 @@ namespace UnityLevelEditor.RoomExtension
         [field: SerializeField, HideInInspector]
         public float FloorSize { get; set; }
 
-        private GameObject floorRoot;
+        [SerializeField] private GameObject floorRoot;
 
-        private GameObject FloorRoot
-        {
-            get
-            {
-                if (floorRoot == null)
-                {
-                    floorRoot = new GameObject();
-                    floorRoot.transform.parent = transform;
-                    floorRoot.gameObject.name = "Floors";
-                }
+        private GameObject FloorRoot => GetRoot(ref floorRoot , "Floors");
 
-                return floorRoot;
-            }
-        }
+        [SerializeField] private GameObject eastWallRoot;
 
-        private GameObject eastWallRoot;
+        private GameObject EastWallRoot  => GetRoot(ref eastWallRoot , "East Walls");
 
-        private GameObject EastWallRoot
-        {
-            get
-            {
-                if (eastWallRoot == null)
-                {
-                    eastWallRoot = new GameObject();
-                    eastWallRoot.transform.parent = transform;
-                    eastWallRoot.gameObject.name = "East Walls";
-                }
 
-                return eastWallRoot;
-            }
-        }
+        [SerializeField] private GameObject southWallRoot;
+
+        private GameObject SouthWallRoot => GetRoot(ref southWallRoot , "South Walls");
+  
+        [SerializeField] private GameObject westWallRoot; 
+
+        private GameObject WestWallRoot => GetRoot(ref westWallRoot , "West Walls");
+     
         
+        [SerializeField] private GameObject northWallRoot;
+
+        private GameObject NorthWallRoot => GetRoot(ref northWallRoot, "North Walls");
+
+        [SerializeField] private GameObject innerCornerRoot;
+
+        private GameObject InnerCornerRoot => GetRoot(ref innerCornerRoot, "Inner Corners");
+
+            [SerializeField] private GameObject outerCornerRoot;
         
-        private GameObject southWallRoot;
+        private GameObject OuterCornerRoot => GetRoot(ref outerCornerRoot, "Outer Corners");
 
-        private GameObject SouthWallRoot
+        private GameObject GetRoot(ref GameObject variableRef, string name)
         {
-            get
+            if (variableRef == null && !TryFindRoot(name, ref variableRef))
             {
-                if (southWallRoot == null)
-                {
-                    southWallRoot = new GameObject();
-                    southWallRoot.transform.parent = transform;
-                    southWallRoot.gameObject.name = "South Walls";
-                }
-
-                return southWallRoot;
+                variableRef = new GameObject();
+                variableRef.transform.parent = transform;
+                variableRef.gameObject.name = name;
             }
+
+            return variableRef;
         }
         
-        private GameObject westWallRoot;
-
-        private GameObject WestWallRoot
+        private bool TryFindRoot(string name, ref GameObject variableRef)
         {
-            get
+            var roots = new List<Transform>();
+            
+            var changeParents = new List<Transform>();
+            
+            foreach (Transform childTransform in transform)
             {
-                if (westWallRoot == null)
+                if (childTransform.gameObject.name.Equals(name))
                 {
-                    westWallRoot = new GameObject();
-                    westWallRoot.transform.parent = transform;
-                    westWallRoot.gameObject.name = "West Walls";
+                    roots.Add(childTransform);
+
+                    if (roots.Count > 1)
+                    {
+                        foreach (Transform grandChild in childTransform)
+                        {
+                            changeParents.Add(grandChild);
+                        }
+                    }
                 }
-
-                return westWallRoot;
             }
-        }
-        
-        private GameObject northWallRoot;
 
-        private GameObject NorthWallRoot
-        {
-            get
+            if (roots.Count == 0)
             {
-                if (northWallRoot == null)
-                {
-                    northWallRoot = new GameObject();
-                    northWallRoot.transform.parent = transform;
-                    northWallRoot.gameObject.name = "North Walls";
-                }
-
-                return northWallRoot;
+                variableRef = null;
+                return false;
             }
-        }
 
-        private GameObject innerCornerRoot;
-        
-        private GameObject InnerCornerRoot
-        {
-            get
+            var root = roots[0];
+
+            foreach (var newChild in changeParents)
             {
-                if (innerCornerRoot == null)
-                {
-                    innerCornerRoot = new GameObject();
-                    innerCornerRoot.transform.parent = transform;
-                    innerCornerRoot.gameObject.name = "Inner Corners";
-                }
-
-                return innerCornerRoot;
+                newChild.SetParent(root, true);
             }
-        }
-        
-        private GameObject outerCornerRoot;
-        
-        private GameObject OuterCornerRoot
-        {
-            get
+
+            for (var i = 1; i < roots.Count; i++)
             {
-                if (outerCornerRoot == null)
-                {
-                    outerCornerRoot = new GameObject();
-                    outerCornerRoot.transform.parent = transform;
-                    outerCornerRoot.gameObject.name = "Outer Corners";
-                }
-
-                return outerCornerRoot;
+                DestroyImmediate(roots[i].gameObject);
             }
+
+            variableRef = root.gameObject;
+            return true;
         }
 
 #if UNITY_EDITOR
