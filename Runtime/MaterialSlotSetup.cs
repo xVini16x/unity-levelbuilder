@@ -80,7 +80,7 @@ namespace UnityLevelEditor.Model
 
             if (materialIndex >= materialArray.Length)
             {
-                Array.Resize(ref materialArray, materialIndex);
+                Array.Resize(ref materialArray, materialIndex + 1);
             }
 
             materialArray[materialIndex] = newMaterial;
